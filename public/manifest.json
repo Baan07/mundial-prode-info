@@ -1,0 +1,16 @@
+{
+  "name": "Mundial Prode Info",
+  "short_name": "Prode 2026",
+  "description": "Fixture, predicciones y prodes recreativos del Mundial 2026.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07111f",
+  "theme_color": "#38bdf8",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
