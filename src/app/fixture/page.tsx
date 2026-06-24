@@ -15,7 +15,7 @@ export default async function FixturePage() {
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-sm font-bold uppercase tracking-wide text-sky-300">
-            {isLiveConnected ? "Resultados live cada 30s" : "Fixture real · conectar API para goles live"}
+            {isLiveConnected ? "Resultados live cada 30s" : "Fixture real · conectar API para goles y formaciones live"}
           </p>
           <h1 className="mt-2 text-4xl font-black text-white">Fixture 2026</h1>
         </div>

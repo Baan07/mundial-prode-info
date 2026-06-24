@@ -1,5 +1,8 @@
 import { matches as fallbackMatches, players as fallbackPlayers, teams as fallbackTeams } from "./data";
 import { Match, MatchStatus, Team } from "./types";
+import { getFallbackLineup } from "./squads";
+import { supabase } from "./supabase";
+import { Position, SquadPlayer, TeamLineup } from "./types";
 
 const FIXTURES_URL = "https://www.thestatsapi.com/world-cup/data/fixtures.json";
 const ARGENTINA_TZ = "America/Argentina/Buenos_Aires";
@@ -76,6 +79,56 @@ const flagByTeam: Record<string, string> = {
   Uzbekistan: "🇺🇿",
 };
 
+const spanishNameByTeam: Record<string, string> = {
+  Algeria: "Argelia",
+  Australia: "Australia",
+  Austria: "Austria",
+  Belgium: "Belgica",
+  "Bosnia and Herzegovina": "Bosnia y Herzegovina",
+  Brazil: "Brasil",
+  "Cabo Verde": "Cabo Verde",
+  Canada: "Canada",
+  Colombia: "Colombia",
+  "Congo DR": "RD Congo",
+  "Cote d'Ivoire": "Costa de Marfil",
+  Croatia: "Croacia",
+  Curacao: "Curazao",
+  Czechia: "Republica Checa",
+  Ecuador: "Ecuador",
+  Egypt: "Egipto",
+  England: "Inglaterra",
+  France: "Francia",
+  Germany: "Alemania",
+  Ghana: "Ghana",
+  Haiti: "Haiti",
+  "IR Iran": "Iran",
+  Iraq: "Irak",
+  Japan: "Japon",
+  Jordan: "Jordania",
+  "Korea Republic": "Corea del Sur",
+  Mexico: "Mexico",
+  Morocco: "Marruecos",
+  Netherlands: "Paises Bajos",
+  "New Zealand": "Nueva Zelanda",
+  Norway: "Noruega",
+  Panama: "Panama",
+  Paraguay: "Paraguay",
+  Portugal: "Portugal",
+  Qatar: "Qatar",
+  "Saudi Arabia": "Arabia Saudita",
+  Scotland: "Escocia",
+  Senegal: "Senegal",
+  "South Africa": "Sudafrica",
+  Spain: "España",
+  Sweden: "Suecia",
+  Switzerland: "Suiza",
+  Tunisia: "Tunez",
+  Turkiye: "Turquia",
+  "United States": "Estados Unidos",
+  Uruguay: "Uruguay",
+  Uzbekistan: "Uzbekistan",
+};
+
 const strengthByTeam: Record<string, number> = {
   Argentina: 94,
   France: 93,
@@ -139,11 +192,19 @@ function isPlaceholder(name: string) {
 
 function toTeam(name: string, group = ""): Team {
   const existing = fallbackTeams.find((team) => team.name === name || team.countryCode === name);
-  if (existing) return { ...existing, flag: flagByTeam[name] ?? existing.flag, group: group || existing.group };
+  if (existing) {
+    return {
+      ...existing,
+      id: slug(name),
+      name: spanishNameByTeam[name] ?? existing.name,
+      flag: flagByTeam[name] ?? existing.flag,
+      group: group || existing.group,
+    };
+  }
 
   return {
     id: slug(name),
-    name,
+    name: spanishNameByTeam[name] ?? name,
     flag: flagByTeam[name] ?? (isPlaceholder(name) ? "🏆" : "🏳️"),
     countryCode: slug(name).slice(0, 3).toUpperCase(),
     group,
@@ -285,6 +346,42 @@ export async function getRealMatch(id: string) {
   };
 }
 
+export async function getLineup(teamId: string) {
+  if (supabase) {
+    const { data: lineup } = await supabase
+      .from("team_lineups")
+      .select("team_id, formation, source, lineup_players(name, position, current_club, club_country, shirt_number, starter)")
+      .eq("team_id", teamId)
+      .maybeSingle();
+
+    if (lineup) {
+      const players = ((lineup.lineup_players ?? []) as Array<{
+        name: string;
+        position: Position;
+        current_club: string;
+        club_country: string;
+        shirt_number?: number;
+        starter?: boolean;
+      }>).map<SquadPlayer>((player) => ({
+        name: player.name,
+        position: player.position,
+        currentClub: player.current_club,
+        clubCountry: player.club_country,
+        shirtNumber: player.shirt_number,
+        starter: player.starter,
+      }));
+      return {
+        teamId: lineup.team_id,
+        formation: lineup.formation,
+        source: lineup.source,
+        players,
+      } as TeamLineup;
+    }
+  }
+
+  return getFallbackLineup(teamId);
+}
+
 export function getTeamFromList(teams: Team[], id: string) {
   return teams.find((team) => team.id === id);
 }
@@ -296,6 +393,8 @@ export function formatArgentinaTime(value: string) {
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
+    hourCycle: "h23",
     timeZone: ARGENTINA_TZ,
   }).format(new Date(value));
 }

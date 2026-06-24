@@ -131,6 +131,27 @@ create table public.prode_champion_predictions (
   unique (group_id, user_id)
 );
 
+create table public.team_lineups (
+  id uuid primary key default gen_random_uuid(),
+  team_id text not null,
+  formation text not null,
+  source text not null default 'manual',
+  updated_at timestamptz not null default now()
+);
+
+create table public.lineup_players (
+  id uuid primary key default gen_random_uuid(),
+  lineup_id uuid references public.team_lineups(id) on delete cascade,
+  team_id text not null,
+  name text not null,
+  position text not null,
+  shirt_number int,
+  current_club text,
+  club_country text,
+  starter boolean not null default true,
+  updated_at timestamptz not null default now()
+);
+
 alter table public.teams enable row level security;
 alter table public.players enable row level security;
 alter table public.matches enable row level security;
@@ -142,6 +163,8 @@ alter table public.prode_groups enable row level security;
 alter table public.prode_members enable row level security;
 alter table public.prode_predictions enable row level security;
 alter table public.prode_champion_predictions enable row level security;
+alter table public.team_lineups enable row level security;
+alter table public.lineup_players enable row level security;
 
 create policy "public read teams" on public.teams for select using (true);
 create policy "public read players" on public.players for select using (true);
@@ -150,6 +173,8 @@ create policy "public read goals" on public.goals for select using (true);
 create policy "public read stats" on public.player_stats for select using (true);
 create policy "public read historical scorers" on public.historical_scorers for select using (true);
 create policy "public read predictions" on public.prediction_outputs for select using (true);
+create policy "public read team lineups" on public.team_lineups for select using (true);
+create policy "public read lineup players" on public.lineup_players for select using (true);
 
 create policy "owners read groups" on public.prode_groups for select using (
   owner_id = auth.uid() or exists (

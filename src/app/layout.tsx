@@ -4,12 +4,12 @@ import { Trophy } from "lucide-react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mundial Prode Info",
-  description: "Fixture, selecciones, predicciones y herramientas para prodes recreativos del Mundial 2026.",
+  title: "Mundial 2026 Info",
+  description: "Partidos, resultados en vivo, equipos, jugadores y formaciones del Mundial 2026.",
   manifest: "/manifest.json",
   openGraph: {
-    title: "Mundial Prode Info",
-    description: "Datos y predicciones recreativas para armar prodes del Mundial 2026.",
+    title: "Mundial 2026 Info",
+    description: "Partidos, resultados en vivo, equipos, jugadores y formaciones del Mundial 2026.",
     type: "website",
   },
 };
@@ -24,9 +24,6 @@ const nav = [
   ["Fixture", "/fixture"],
   ["Equipos", "/equipos"],
   ["Jugadores", "/jugadores"],
-  ["Goleadores", "/goleadores"],
-  ["Prode", "/prode"],
-  ["Admin", "/admin"],
 ];
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -37,7 +34,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <nav className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
             <Link className="flex items-center gap-2 text-lg font-black text-white" href="/">
               <span className="grid size-9 place-items-center rounded-md bg-sky-400 text-slate-950"><Trophy size={20} /></span>
-              Mundial Prode Info
+              Mundial 2026 Info
             </Link>
             <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0">
               {nav.map(([label, href]) => (
@@ -50,7 +47,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </header>
         {children}
         <footer className="mx-auto max-w-7xl px-4 py-8 text-sm text-sky-100/55">
-          Predicciones con fines informativos y de entretenimiento. No garantizan resultados.
+          Fixture, resultados en vivo, equipos, jugadores y formaciones. Horarios en Argentina.
         </footer>
       </body>
     </html>

@@ -33,6 +33,22 @@ export type Player = {
   minutes: number;
 };
 
+export type SquadPlayer = {
+  name: string;
+  position: Position;
+  currentClub: string;
+  clubCountry: string;
+  shirtNumber?: number;
+  starter?: boolean;
+};
+
+export type TeamLineup = {
+  teamId: string;
+  formation: string;
+  players: SquadPlayer[];
+  source: "seed" | "api" | "pending";
+};
+
 export type Match = {
   id: string;
   matchNumber?: number;

@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CalendarClock, MapPin } from "lucide-react";
 import { AutoRefresh } from "@/components/AutoRefresh";
-import { PredictionCard } from "@/components/PredictionCard";
+import { LineupPanel } from "@/components/LineupPanel";
 import { StatBadge } from "@/components/StatBadge";
-import { formatArgentinaTime, getRealMatch, getTeamFromList } from "@/lib/realData";
-import { predictMatch } from "@/lib/predictionEngine";
+import { formatArgentinaTime, getLineup, getRealMatch, getTeamFromList } from "@/lib/realData";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -18,8 +17,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const home = getTeamFromList(teams, match.homeTeamId);
   const away = getTeamFromList(teams, match.awayTeamId);
   return {
-    title: `${home?.name} vs ${away?.name} | Mundial Prode Info`,
-    description: `${home?.name} vs ${away?.name}: horario Argentina, estadio, estado y previa para prode.`,
+    title: `${home?.name} vs ${away?.name} | Mundial 2026 Info`,
+    description: `${home?.name} vs ${away?.name}: horario Argentina, estadio, estado, jugadores y formaciones.`,
   };
 }
 
@@ -31,8 +30,9 @@ export default async function MatchPage({ params }: Props) {
   const away = getTeamFromList(teams, match.awayTeamId);
   if (!home || !away) notFound();
 
-  const prediction = predictMatch(home, away, match);
   const hasScore = match.homeScore !== undefined && match.awayScore !== undefined;
+  const homeLineup = await getLineup(home.id);
+  const awayLineup = await getLineup(away.id);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6">
@@ -78,13 +78,14 @@ export default async function MatchPage({ params }: Props) {
       </section>
 
       <section className="mt-5 grid gap-4 sm:grid-cols-3">
-        <StatBadge label="Fuerza local" value={home.strengthRating} />
-        <StatBadge label="Fuerza visita" value={away.strengthRating} />
-        <StatBadge label="Riesgo prode" value={prediction.risk} />
+        <StatBadge label="Local" value={home.name} />
+        <StatBadge label="Visitante" value={away.name} />
+        <StatBadge label="Estado" value={match.status === "live" ? "En vivo" : match.status === "finished" ? "Final" : "Por jugar"} />
       </section>
 
-      <section className="mt-5">
-        <PredictionCard prediction={prediction} />
+      <section className="mt-5 grid gap-4 lg:grid-cols-2">
+        <LineupPanel lineup={homeLineup} team={home} />
+        <LineupPanel lineup={awayLineup} team={away} />
       </section>
     </main>
   );

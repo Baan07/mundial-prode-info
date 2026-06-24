@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessageCircle, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { MatchCard } from "@/components/MatchCard";
 import { getWorldCupData } from "@/lib/realData";
@@ -23,21 +23,13 @@ export default async function Home() {
       <AutoRefresh seconds={30} />
       <section className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase tracking-wide text-sky-300">Mundial 2026 · horarios Argentina</p>
+          <p className="text-sm font-bold uppercase tracking-wide text-sky-300">Mundial 2026 · hora Argentina 24 hs</p>
           <h1 className="mt-2 text-3xl font-black text-white md:text-5xl">Partidos a jugar</h1>
         </div>
         <div className="flex flex-wrap gap-2">
           <span className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.06] px-3 py-2 text-sm font-bold text-sky-50">
             <RefreshCw size={16} /> {isLiveConnected ? "Live conectado" : "Fixtures reales"}
           </span>
-          <a
-            className="inline-flex items-center gap-2 rounded-md bg-emerald-500 px-4 py-2 text-sm font-black text-slate-950"
-            href="https://wa.me/?text=Mundial%20Prode%20Info%20-%20Fixture%202026"
-            rel="noreferrer"
-            target="_blank"
-          >
-            <MessageCircle size={16} /> Compartir
-          </a>
         </div>
       </section>
 
@@ -51,7 +43,7 @@ export default async function Home() {
         <div>
           <p className="text-sm font-bold text-white">Fuente: {source}</p>
           <p className="mt-1 text-sm text-sky-100/65">
-            Para goles y eventos en vivo, cargar `FOOTBALL_API_KEY` en Netlify.
+            Para resultados, goles, jugadores y formaciones confirmadas en vivo, cargar `FOOTBALL_API_KEY` en Netlify.
           </p>
         </div>
         <Link className="rounded-md bg-white px-4 py-2 text-center text-sm font-black text-slate-950" href="/fixture">
