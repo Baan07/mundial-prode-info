@@ -1,42 +1,95 @@
 import Link from "next/link";
-import { CalendarClock, ChartNoAxesCombined, MessageCircle } from "lucide-react";
-import { formatArgentinaTime, getTeam } from "@/lib/data";
-import { predictMatch } from "@/lib/predictionEngine";
-import { Match } from "@/lib/types";
+import { CalendarClock, MapPin, MessageCircle } from "lucide-react";
+import { formatArgentinaTime, getTeamFromList } from "@/lib/realData";
+import { Match, Team } from "@/lib/types";
 
-export function MatchCard({ match }: { match: Match }) {
-  const home = getTeam(match.homeTeamId);
-  const away = getTeam(match.awayTeamId);
+const statusLabel = {
+  scheduled: "Por jugar",
+  live: "En vivo",
+  finished: "Final",
+};
+
+export function MatchCard({
+  match,
+  teams,
+  compact = false,
+}: {
+  match: Match;
+  teams: Team[];
+  compact?: boolean;
+}) {
+  const home = getTeamFromList(teams, match.homeTeamId);
+  const away = getTeamFromList(teams, match.awayTeamId);
   if (!home || !away) return null;
-  const prediction = predictMatch(home, away, match);
-  const shareText = encodeURIComponent(`Previa ${home.name} vs ${away.name}: ${prediction.predictedHomeScore}-${prediction.predictedAwayScore}. Mundial Prode Info`);
+
+  const hasScore = match.homeScore !== undefined && match.awayScore !== undefined;
+  const shareText = encodeURIComponent(
+    `${home.name} vs ${away.name} - ${formatArgentinaTime(match.kickoffAt)} ARG - Mundial Prode Info`,
+  );
 
   return (
-    <article className="rounded-lg border border-white/10 bg-white/[0.05] p-4 shadow-xl shadow-black/20">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-wide text-sky-200/70">{match.phase} · Grupo {match.group}</p>
-          <h3 className="mt-2 text-xl font-bold text-white">
-            {home.flag} {home.name} <span className="text-sky-200/50">vs</span> {away.flag} {away.name}
-          </h3>
+    <article className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.055] shadow-xl shadow-black/20">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+        <p className="text-xs font-bold uppercase tracking-wide text-sky-200/75">
+          #{match.matchNumber ?? "--"} · {match.group ? `Grupo ${match.group}` : match.phase}
+        </p>
+        <span
+          className={`rounded-md px-2 py-1 text-xs font-black ${
+            match.status === "live" ? "bg-emerald-400 text-slate-950" : "bg-white/10 text-sky-50"
+          }`}
+        >
+          {match.status === "live" && match.liveMinute ? `${match.liveMinute}' ` : ""}
+          {statusLabel[match.status]}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-5">
+        <div className="min-w-0">
+          <div className="text-4xl leading-none">{home.flag}</div>
+          <h3 className="mt-2 truncate text-lg font-black text-white">{home.name}</h3>
         </div>
-        <span className="rounded-md bg-sky-400 px-2 py-1 text-xs font-bold text-slate-950">{match.status}</span>
+        <div className="min-w-[76px] rounded-md bg-slate-950 px-3 py-2 text-center">
+          {hasScore ? (
+            <div className="text-3xl font-black text-white">
+              {match.homeScore}-{match.awayScore}
+            </div>
+          ) : (
+            <div className="text-sm font-black text-sky-200">VS</div>
+          )}
+        </div>
+        <div className="min-w-0 text-right">
+          <div className="text-4xl leading-none">{away.flag}</div>
+          <h3 className="mt-2 truncate text-lg font-black text-white">{away.name}</h3>
+        </div>
       </div>
-      <div className="mt-4 grid gap-2 text-sm text-sky-100/75">
-        <span className="flex items-center gap-2"><CalendarClock size={16} /> {formatArgentinaTime(match.kickoffAt)}</span>
-        <span>{match.stadium}, {match.city}</span>
+
+      <div className="grid gap-2 px-4 pb-4 text-sm text-sky-100/75">
+        <span className="flex items-center gap-2">
+          <CalendarClock size={16} /> {formatArgentinaTime(match.kickoffAt)} ARG
+        </span>
+        <span className="flex items-center gap-2">
+          <MapPin size={16} /> {match.stadium}, {match.city}
+        </span>
       </div>
-      <div className="mt-4 rounded-md bg-slate-950/70 p-3 text-sm text-sky-50">
-        <ChartNoAxesCombined size={16} className="mb-2 text-sky-300" />
-        Estimado: <strong>{prediction.predictedHomeScore}-{prediction.predictedAwayScore}</strong> · Confianza {prediction.confidence} · Riesgo {prediction.risk}
-      </div>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Link className="rounded-md bg-white px-4 py-2 text-sm font-bold text-slate-950" href={`/partido/${match.id}`}>Ver previa</Link>
-        <Link className="rounded-md border border-sky-300/40 px-4 py-2 text-sm font-bold text-sky-50" href="/prode">Hacer prediccion</Link>
-        <a className="inline-flex items-center gap-2 rounded-md bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950" href={`https://wa.me/?text=${shareText}`} target="_blank" rel="noreferrer">
-          <MessageCircle size={16} /> WhatsApp
-        </a>
-      </div>
+
+      {!compact && (
+        <div className="flex flex-wrap gap-2 border-t border-white/10 px-4 py-3">
+          <Link className="rounded-md bg-white px-4 py-2 text-sm font-bold text-slate-950" href={`/partido/${match.id}`}>
+            Ficha
+          </Link>
+          <Link className="rounded-md border border-sky-300/40 px-4 py-2 text-sm font-bold text-sky-50" href="/prode">
+            Prode
+          </Link>
+          <a
+            className="inline-flex items-center gap-2 rounded-md bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950"
+            href={`https://wa.me/?text=${shareText}`}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <MessageCircle size={16} /> WhatsApp
+          </a>
+        </div>
+      )}
     </article>
   );
 }

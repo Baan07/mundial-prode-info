@@ -35,6 +35,7 @@ export type Player = {
 
 export type Match = {
   id: string;
+  matchNumber?: number;
   group: string;
   phase: string;
   homeTeamId: string;
@@ -45,8 +46,10 @@ export type Match = {
   status: MatchStatus;
   homeScore?: number;
   awayScore?: number;
+  liveMinute?: number;
   scorers: string[];
   importance: number;
+  sourceUrl?: string;
 };
 
 export type PredictionOutput = {

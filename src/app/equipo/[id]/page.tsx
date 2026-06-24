@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { MatchCard } from "@/components/MatchCard";
 import { PlayerCard } from "@/components/PlayerCard";
 import { StatBadge } from "@/components/StatBadge";
-import { getTeam, teamMatches, teamPlayers } from "@/lib/data";
+import { getTeam, teamMatches, teamPlayers, teams } from "@/lib/data";
 import { Position } from "@/lib/types";
 
 type Props = { params: Promise<{ id: string }> };
@@ -41,7 +41,7 @@ export default async function TeamPage({ params }: Props) {
       <section className="mt-8">
         <h2 className="mb-4 text-2xl font-black text-white">Proximos partidos</h2>
         <div className="grid gap-4 md:grid-cols-2">
-          {teamMatches(team.id).map((match) => <MatchCard match={match} key={match.id} />)}
+          {teamMatches(team.id).map((match) => <MatchCard match={match} teams={teams} key={match.id} />)}
         </div>
       </section>
     </main>

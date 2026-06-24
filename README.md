@@ -2,7 +2,7 @@
 
 Web-app PWA sobre el Mundial 2026 orientada a usuarios de Argentina que juegan prodes recreativos entre amigos, empresas, clubes o comercios.
 
-Incluye Home, Fixture, pagina de partido con motor de prediccion interno, selecciones, jugadores, goleadores, prode basico, panel de usuario, admin basico, SQL de Supabase con RLS, estructura para APIs externas y configuracion de Netlify.
+Incluye Home, Fixture real, pagina de partido con motor de prediccion interno, selecciones, jugadores, goleadores, prode basico, panel de usuario, admin basico, SQL de Supabase con RLS, estructura para APIs externas y configuracion de Netlify.
 
 ## Stack
 
@@ -31,7 +31,21 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 FOOTBALL_API_KEY=
 FOOTBALL_API_BASE_URL=
+FOOTBALL_API_PROVIDER=api-football
 ```
+
+## Datos reales y live
+
+La app carga el fixture real del Mundial 2026 desde `https://www.thestatsapi.com/world-cup/data/fixtures.json`, que publica los 104 partidos con horarios UTC, grupos, sedes y ciudades.
+
+Para resultados, goles y estados en vivo, cargar una key de API-Football/API-Sports en Netlify:
+
+```bash
+FOOTBALL_API_KEY=tu_token
+FOOTBALL_API_BASE_URL=https://v3.football.api-sports.io
+```
+
+Con esa variable, las paginas principales refrescan cada 30 segundos y superponen marcador/estado live sobre el fixture.
 
 ## Supabase
 

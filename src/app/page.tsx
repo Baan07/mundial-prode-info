@@ -1,50 +1,62 @@
 import Link from "next/link";
-import { MessageCircle, PlusCircle } from "lucide-react";
-import { GroupTable } from "@/components/GroupTable";
+import { MessageCircle, RefreshCw } from "lucide-react";
+import { AutoRefresh } from "@/components/AutoRefresh";
 import { MatchCard } from "@/components/MatchCard";
-import { ScorerTable } from "@/components/ScorerTable";
-import { SearchBar } from "@/components/SearchBar";
-import { matches } from "@/lib/data";
+import { getWorldCupData } from "@/lib/realData";
 
-export default function Home() {
-  const highlighted = matches.slice(0, 3);
-  const prodeMatches = matches.filter((match) => match.importance >= 4).slice(0, 3);
+export const revalidate = 30;
+
+function nextMatches<T extends { kickoffAt: string; status: string }>(matches: T[]) {
+  const live = matches.filter((match) => match.status === "live");
+  const upcoming = matches
+    .filter((match) => match.status === "scheduled")
+    .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime());
+  return [...live, ...upcoming].slice(0, 9);
+}
+
+export default async function Home() {
+  const { matches, teams, source, isLiveConnected } = await getWorldCupData();
+  const visibleMatches = nextMatches(matches);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-6 md:py-10">
-      <section className="grid gap-6 md:grid-cols-[1.15fr_0.85fr] md:items-end">
+    <main className="mx-auto max-w-7xl px-4 py-5 md:py-8">
+      <AutoRefresh seconds={30} />
+      <section className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-sm font-bold uppercase tracking-wide text-sky-300">Mundial 2026 · Argentina</p>
-          <h1 className="mt-3 max-w-3xl text-4xl font-black leading-tight text-white md:text-6xl">Fixture, datos y predicciones para ganar el prode de amigos.</h1>
-          <p className="mt-4 max-w-2xl text-lg leading-8 text-sky-100/75">Una PWA rapida para consultar partidos, selecciones, jugadores, goleadores y consejos recreativos antes de completar tus pronosticos.</p>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link className="inline-flex items-center justify-center gap-2 rounded-md bg-sky-400 px-5 py-3 font-black text-slate-950" href="/prode"><PlusCircle size={18} /> Crear o entrar a un prode</Link>
-            <a className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-500 px-5 py-3 font-black text-slate-950" href="https://wa.me/?text=Mundial%20Prode%20Info%20para%20armar%20el%20prode%202026" target="_blank" rel="noreferrer"><MessageCircle size={18} /> Compartir</a>
-          </div>
+          <p className="text-sm font-bold uppercase tracking-wide text-sky-300">Mundial 2026 · horarios Argentina</p>
+          <h1 className="mt-2 text-3xl font-black text-white md:text-5xl">Partidos a jugar</h1>
         </div>
-        <SearchBar />
-      </section>
-
-      <section className="mt-10 grid gap-4 md:grid-cols-3">
-        {highlighted.map((match) => <MatchCard match={match} key={match.id} />)}
-      </section>
-
-      <section className="mt-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div>
-          <h2 className="mb-4 text-2xl font-black text-white">Tabla rapida de grupos</h2>
-          <GroupTable />
-        </div>
-        <div>
-          <h2 className="mb-4 text-2xl font-black text-white">Top goleadores</h2>
-          <ScorerTable />
+        <div className="flex flex-wrap gap-2">
+          <span className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.06] px-3 py-2 text-sm font-bold text-sky-50">
+            <RefreshCw size={16} /> {isLiveConnected ? "Live conectado" : "Fixtures reales"}
+          </span>
+          <a
+            className="inline-flex items-center gap-2 rounded-md bg-emerald-500 px-4 py-2 text-sm font-black text-slate-950"
+            href="https://wa.me/?text=Mundial%20Prode%20Info%20-%20Fixture%202026"
+            rel="noreferrer"
+            target="_blank"
+          >
+            <MessageCircle size={16} /> Compartir
+          </a>
         </div>
       </section>
 
-      <section className="mt-10">
-        <h2 className="mb-4 text-2xl font-black text-white">Partidos ideales para el prode</h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          {prodeMatches.map((match) => <MatchCard match={match} key={match.id} />)}
+      <section className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {visibleMatches.map((match) => (
+          <MatchCard match={match} teams={teams} key={match.id} />
+        ))}
+      </section>
+
+      <section className="mt-8 flex flex-col gap-3 rounded-lg border border-white/10 bg-white/[0.045] p-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-sm font-bold text-white">Fuente: {source}</p>
+          <p className="mt-1 text-sm text-sky-100/65">
+            Para goles y eventos en vivo, cargar `FOOTBALL_API_KEY` en Netlify.
+          </p>
         </div>
+        <Link className="rounded-md bg-white px-4 py-2 text-center text-sm font-black text-slate-950" href="/fixture">
+          Ver fixture completo
+        </Link>
       </section>
     </main>
   );
