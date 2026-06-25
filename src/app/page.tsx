@@ -3,6 +3,7 @@ import { Bell, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { MatchCard } from "@/components/MatchCard";
 import { getWorldCupData } from "@/lib/realData";
+import { Match } from "@/lib/types";
 
 export const revalidate = 30;
 
@@ -24,21 +25,58 @@ function todayInArgentina() {
   }).format(new Date());
 }
 
-function visibleMatches<T extends { kickoffAt: string; status: string }>(matches: T[]) {
-  const today = todayInArgentina();
-  const todayMatches = matches.filter((match) => argentinaDate(match.kickoffAt) === today);
-  if (todayMatches.length) return todayMatches;
+function addDays(date: string, days: number) {
+  const [year, month, day] = date.split("-").map(Number);
+  const value = new Date(Date.UTC(year, month - 1, day + days, 12));
+  return value.toISOString().slice(0, 10);
+}
 
-  const live = matches.filter((match) => match.status === "live");
-  const upcoming = matches
-    .filter((match) => match.status === "scheduled")
-    .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime());
-  return [...live, ...upcoming].slice(0, 10);
+function dayTitle(date: string, index: number) {
+  if (index === 0) return "Hoy";
+  if (index === 1) return "Manana";
+  if (index === 2) return "Pasado manana";
+  return new Intl.DateTimeFormat("es-AR", {
+    day: "2-digit",
+    month: "long",
+    timeZone: "America/Argentina/Buenos_Aires",
+    weekday: "long",
+  }).format(new Date(`${date}T12:00:00Z`));
+}
+
+function visibleMatchGroups(matches: Match[]) {
+  const today = todayInArgentina();
+  const dates = [today, addDays(today, 1), addDays(today, 2)];
+  const groups = dates.map((date, index) => ({
+    date,
+    title: dayTitle(date, index),
+    matches: matches
+      .filter((match) => argentinaDate(match.kickoffAt) === date)
+      .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime()),
+  }));
+
+  if (groups.some((group) => group.matches.length)) return groups;
+
+  const nextDates = Array.from(
+    new Set(
+      matches
+        .filter((match) => match.status !== "finished")
+        .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime())
+        .map((match) => argentinaDate(match.kickoffAt)),
+    ),
+  ).slice(0, 3);
+
+  return nextDates.map((date, index) => ({
+    date,
+    title: dayTitle(date, index),
+    matches: matches
+      .filter((match) => argentinaDate(match.kickoffAt) === date)
+      .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime()),
+  }));
 }
 
 export default async function Home() {
   const { matches, teams, source, isLiveConnected } = await getWorldCupData();
-  const matchesToShow = visibleMatches(matches);
+  const matchGroups = visibleMatchGroups(matches);
   const liveCount = matches.filter((match) => match.status === "live").length;
 
   return (
@@ -48,7 +86,7 @@ export default async function Home() {
         <div className="grid grid-cols-[44px_1fr_44px] items-center border-b border-emerald-100/15 px-3 py-4">
           <ChevronLeft className="text-white" />
           <h1 className="text-center text-lg font-black uppercase text-white">
-            {matchesToShow.length ? "Partidos de hoy" : "Proximos partidos"} <span className="text-lime-400">▼</span>
+            Hoy y proximos 2 dias <span className="text-lime-400">▼</span>
           </h1>
           <ChevronRight className="justify-self-end text-white" />
         </div>
@@ -75,11 +113,19 @@ export default async function Home() {
         </div>
 
         <div className="px-0 pb-4">
-          <div className="border-y border-emerald-100/20 bg-[#052617] px-4 py-2 text-sm font-black uppercase text-white">
-            🏆 Mundial
-          </div>
-          {matchesToShow.map((match) => (
-            <MatchCard match={match} teams={teams} key={match.id} />
+          {matchGroups.map((group) => (
+            <section key={group.date}>
+              <div className="border-y border-emerald-100/20 bg-[#052617] px-4 py-2 text-sm font-black uppercase text-white">
+                Mundial · {group.title} · {new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short" }).format(new Date(`${group.date}T12:00:00Z`))}
+              </div>
+              {group.matches.length ? (
+                group.matches.map((match) => <MatchCard match={match} teams={teams} key={match.id} />)
+              ) : (
+                <div className="border-t border-emerald-100/20 px-4 py-5 text-sm font-bold text-emerald-100/65">
+                  Sin partidos programados.
+                </div>
+              )}
+            </section>
           ))}
         </div>
       </section>

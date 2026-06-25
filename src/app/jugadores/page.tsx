@@ -1,3 +1,4 @@
+import { FlagBadge } from "@/components/FlagBadge";
 import { getWorldCupData } from "@/lib/realData";
 import { getFallbackPlayers } from "@/lib/squads";
 
@@ -37,7 +38,16 @@ export default async function PlayersPage() {
               return (
                 <tr className="text-sky-50" key={`${player.teamId}-${player.name}`}>
                   <td className="p-3 font-bold text-white">{player.name}</td>
-                  <td>{team?.flag} {team?.name ?? player.teamId}</td>
+                  <td>
+                    {team ? (
+                      <span className="flex items-center gap-2">
+                        <FlagBadge size="sm" team={team} />
+                        {team.name}
+                      </span>
+                    ) : (
+                      player.teamId
+                    )}
+                  </td>
                   <td>{player.position}</td>
                   <td>{player.currentClub}</td>
                   <td>{player.clubCountry}</td>
