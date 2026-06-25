@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FlagBadge } from "@/components/FlagBadge";
 import { getWorldCupData } from "@/lib/realData";
 
 export const revalidate = 1800;
@@ -15,7 +16,7 @@ export default async function TeamsPage() {
       <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {orderedTeams.map((team) => (
           <Link className="rounded-lg border border-white/10 bg-white/[0.055] p-4 transition hover:border-sky-300/50" href={`/equipo/${team.id}`} key={team.id}>
-            <div className="text-5xl">{team.flag}</div>
+            <FlagBadge size="lg" team={team} />
             <h2 className="mt-3 text-xl font-black text-white">{team.name}</h2>
             <p className="mt-1 text-sm font-bold text-sky-200">Grupo {team.group}</p>
           </Link>

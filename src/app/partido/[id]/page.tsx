@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CalendarClock, MapPin, Tv } from "lucide-react";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { FlagBadge } from "@/components/FlagBadge";
 import { LineupPanel } from "@/components/LineupPanel";
 import { StatBadge } from "@/components/StatBadge";
 import { channelLabel, channelNote } from "@/lib/broadcast";
@@ -50,7 +51,7 @@ export default async function MatchPage({ params }: Props) {
 
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-8">
           <div>
-            <div className="text-6xl">{home.flag}</div>
+            <FlagBadge size="xl" team={home} />
             <h1 className="mt-3 text-2xl font-black text-white md:text-4xl">{home.name}</h1>
           </div>
           <div className="rounded-lg bg-slate-950 px-5 py-4 text-center">
@@ -63,7 +64,9 @@ export default async function MatchPage({ params }: Props) {
             )}
           </div>
           <div className="text-right">
-            <div className="text-6xl">{away.flag}</div>
+            <div className="flex justify-end">
+              <FlagBadge size="xl" team={away} />
+            </div>
             <h2 className="mt-3 text-2xl font-black text-white md:text-4xl">{away.name}</h2>
           </div>
         </div>

@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Tv } from "lucide-react";
+import { FlagBadge } from "@/components/FlagBadge";
 import { channelLabel } from "@/lib/broadcast";
 import { formatArgentinaTime, getTeamFromList } from "@/lib/realData";
 import { Match, Team } from "@/lib/types";
 
 const statusLabel = {
-  scheduled: "PROGRAMADO",
   live: "EN VIVO",
   finished: "FINAL",
 };
@@ -26,21 +26,23 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
       <article className="grid grid-cols-[78px_1fr] border-t border-emerald-100/20 bg-[#062f1d]/92 transition hover:bg-[#0a3a24] md:grid-cols-[92px_1fr_210px]">
         <div className="grid place-items-center border-r border-emerald-100/20 px-2 py-3 text-center">
           <span className="text-xs font-black text-white">{timeOnly(match.kickoffAt)}</span>
-          <span className={`mt-1 rounded px-1.5 py-0.5 text-[10px] font-black ${match.status === "live" ? "bg-lime-400 text-green-950" : "bg-black/25 text-lime-200"}`}>
-            {match.status === "live" && match.liveMinute ? `${match.liveMinute}'` : statusLabel[match.status]}
-          </span>
+          {match.status !== "scheduled" ? (
+            <span className={`mt-1 rounded px-1.5 py-0.5 text-[10px] font-black ${match.status === "live" ? "bg-lime-400 text-green-950" : "bg-black/25 text-lime-200"}`}>
+              {match.status === "live" && match.liveMinute ? `${match.liveMinute}'` : statusLabel[match.status]}
+            </span>
+          ) : null}
         </div>
 
         <div className="grid grid-cols-[1fr_48px_1fr] items-center gap-2 px-3 py-3">
           <div className="flex min-w-0 items-center justify-end gap-2 text-right">
             <span className="truncate text-sm font-black text-white md:text-base">{home.name}</span>
-            <span className="text-3xl">{home.flag}</span>
+            <FlagBadge team={home} />
           </div>
           <div className="text-center text-lg font-black text-white">
             {hasScore ? `${match.homeScore}-${match.awayScore}` : "-"}
           </div>
           <div className="flex min-w-0 items-center gap-2">
-            <span className="text-3xl">{away.flag}</span>
+            <FlagBadge team={away} />
             <span className="truncate text-sm font-black text-white md:text-base">{away.name}</span>
           </div>
           <div className="col-span-3 mt-1 truncate text-center text-xs font-bold text-emerald-100/70">

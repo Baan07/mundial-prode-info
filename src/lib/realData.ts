@@ -79,6 +79,57 @@ const flagByTeam: Record<string, string> = {
   Uzbekistan: "🇺🇿",
 };
 
+const flagCodeByTeam: Record<string, string> = {
+  Algeria: "dz",
+  Argentina: "ar",
+  Australia: "au",
+  Austria: "at",
+  Belgium: "be",
+  "Bosnia and Herzegovina": "ba",
+  Brazil: "br",
+  "Cabo Verde": "cv",
+  Canada: "ca",
+  Colombia: "co",
+  "Congo DR": "cd",
+  "Cote d'Ivoire": "ci",
+  Croatia: "hr",
+  Curacao: "cw",
+  Czechia: "cz",
+  Ecuador: "ec",
+  Egypt: "eg",
+  England: "gb-eng",
+  France: "fr",
+  Germany: "de",
+  Ghana: "gh",
+  Haiti: "ht",
+  "IR Iran": "ir",
+  Iraq: "iq",
+  Japan: "jp",
+  Jordan: "jo",
+  "Korea Republic": "kr",
+  Mexico: "mx",
+  Morocco: "ma",
+  Netherlands: "nl",
+  "New Zealand": "nz",
+  Norway: "no",
+  Panama: "pa",
+  Paraguay: "py",
+  Portugal: "pt",
+  Qatar: "qa",
+  "Saudi Arabia": "sa",
+  Scotland: "gb-sct",
+  Senegal: "sn",
+  "South Africa": "za",
+  Spain: "es",
+  Sweden: "se",
+  Switzerland: "ch",
+  Tunisia: "tn",
+  Turkiye: "tr",
+  "United States": "us",
+  Uruguay: "uy",
+  Uzbekistan: "uz",
+};
+
 const spanishNameByTeam: Record<string, string> = {
   Algeria: "Argelia",
   Australia: "Australia",
@@ -190,14 +241,22 @@ function isPlaceholder(name: string) {
   return /group|winner|loser|third place|runners-up/i.test(name);
 }
 
+function flagUrlForTeam(name: string) {
+  const code = flagCodeByTeam[name];
+  return code ? `https://flagcdn.com/w80/${code}.png` : undefined;
+}
+
 function toTeam(name: string, group = ""): Team {
   const existing = fallbackTeams.find((team) => team.name === name || team.countryCode === name);
+  const flagCode = flagCodeByTeam[name];
   if (existing) {
     return {
       ...existing,
       id: slug(name),
       name: spanishNameByTeam[name] ?? existing.name,
       flag: flagByTeam[name] ?? existing.flag,
+      flagCode,
+      flagUrl: flagUrlForTeam(name),
       group: group || existing.group,
     };
   }
@@ -206,6 +265,8 @@ function toTeam(name: string, group = ""): Team {
     id: slug(name),
     name: spanishNameByTeam[name] ?? name,
     flag: flagByTeam[name] ?? (isPlaceholder(name) ? "🏆" : "🏳️"),
+    flagCode,
+    flagUrl: flagUrlForTeam(name),
     countryCode: slug(name).slice(0, 3).toUpperCase(),
     group,
     coach: "",

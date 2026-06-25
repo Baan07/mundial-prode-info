@@ -1,4 +1,5 @@
 import { teams } from "@/lib/data";
+import { FlagBadge } from "@/components/FlagBadge";
 
 export function GroupTable({ group }: { group?: string }) {
   const rows = teams
@@ -14,7 +15,12 @@ export function GroupTable({ group }: { group?: string }) {
         <tbody className="divide-y divide-white/10">
           {rows.map((team) => (
             <tr key={team.id} className="text-sky-50">
-              <td className="p-3 font-semibold">{team.flag} {team.name}</td>
+              <td className="p-3 font-semibold">
+                <span className="flex items-center gap-2">
+                  <FlagBadge size="sm" team={team} />
+                  {team.name}
+                </span>
+              </td>
               <td>{team.points}</td>
               <td>{team.played}</td>
               <td>{team.goalsFor - team.goalsAgainst}</td>

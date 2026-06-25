@@ -1,3 +1,4 @@
+import { FlagBadge } from "@/components/FlagBadge";
 import { Team, TeamLineup } from "@/lib/types";
 
 export function LineupPanel({ team, lineup }: { team: Team; lineup: TeamLineup }) {
@@ -7,7 +8,10 @@ export function LineupPanel({ team, lineup }: { team: Team; lineup: TeamLineup }
     <section className="rounded-lg border border-emerald-100/15 bg-[#062f1d]/92 p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-white">{team.flag} {team.name}</h2>
+          <h2 className="flex items-center gap-2 text-xl font-black text-white">
+            <FlagBadge size="sm" team={team} />
+            {team.name}
+          </h2>
           <p className="text-sm text-sky-100/65">Formacion: {lineup.formation}</p>
         </div>
         <span className="rounded-md bg-[#052617] px-3 py-2 text-xs font-black uppercase text-lime-300">

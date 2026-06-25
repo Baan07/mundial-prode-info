@@ -5,6 +5,8 @@ export type Team = {
   id: string;
   name: string;
   flag: string;
+  flagCode?: string;
+  flagUrl?: string;
   countryCode: string;
   group: string;
   coach: string;
