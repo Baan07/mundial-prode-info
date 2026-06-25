@@ -37,60 +37,60 @@ export default async function MatchPage({ params }: Props) {
   const awayLineup = await getLineup(away.id);
 
   return (
-    <main className="relative mx-auto max-w-5xl px-4 py-6">
+    <main className="relative mx-auto max-w-5xl px-2 py-3 sm:px-4 sm:py-6">
       <AutoRefresh seconds={30} />
       <section className="overflow-hidden rounded-lg border border-emerald-100/15 bg-[#062f1d]/95 shadow-2xl shadow-black/30">
-        <div className="flex items-center justify-between border-b border-emerald-100/15 px-4 py-3">
-          <p className="text-xs font-black uppercase tracking-wide text-lime-400">
+        <div className="flex items-center justify-between gap-3 border-b border-emerald-100/15 px-3 py-3 sm:px-4">
+          <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-wide text-lime-400 sm:text-xs">
             #{match.matchNumber} · {match.group ? `Grupo ${match.group}` : match.phase}
           </p>
-          <span className="rounded-md bg-white/10 px-3 py-1 text-sm font-black text-white">
+          <span className="shrink-0 rounded-md bg-white/10 px-2.5 py-1 text-xs font-black text-white sm:px-3 sm:text-sm">
             {match.status === "live" ? "En vivo" : match.status === "finished" ? "Final" : "Por jugar"}
           </span>
         </div>
 
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-8">
-          <div>
-            <FlagBadge size="xl" team={home} />
-            <h1 className="mt-3 text-2xl font-black text-white md:text-4xl">{home.name}</h1>
+        <div className="grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] items-center gap-2 px-3 py-5 sm:grid-cols-[minmax(0,1fr)_86px_minmax(0,1fr)] sm:gap-3 sm:px-4 sm:py-8">
+          <div className="min-w-0">
+            <FlagBadge size="lg" team={home} />
+            <h1 className="mt-2 truncate text-xl font-black text-white sm:mt-3 sm:text-2xl md:text-4xl">{home.name}</h1>
           </div>
-          <div className="rounded-lg bg-slate-950 px-5 py-4 text-center">
+          <div className="rounded-lg bg-slate-950 px-2 py-3 text-center sm:px-5 sm:py-4">
             {hasScore ? (
-              <div className="text-5xl font-black text-white">
+              <div className="text-2xl font-black text-white sm:text-5xl">
                 {match.homeScore}-{match.awayScore}
               </div>
             ) : (
-              <div className="text-2xl font-black text-sky-200">VS</div>
+              <div className="text-lg font-black text-sky-200 sm:text-2xl">VS</div>
             )}
           </div>
-          <div className="text-right">
+          <div className="min-w-0 text-right">
             <div className="flex justify-end">
-              <FlagBadge size="xl" team={away} />
+              <FlagBadge size="lg" team={away} />
             </div>
-            <h2 className="mt-3 text-2xl font-black text-white md:text-4xl">{away.name}</h2>
+            <h2 className="mt-2 truncate text-xl font-black text-white sm:mt-3 sm:text-2xl md:text-4xl">{away.name}</h2>
           </div>
         </div>
 
-        <div className="grid gap-3 border-t border-emerald-100/15 px-4 py-4 text-emerald-100/80 md:grid-cols-3">
-          <span className="flex items-center gap-2">
-            <CalendarClock size={18} /> {formatArgentinaTime(match.kickoffAt)} ARG
+        <div className="grid gap-2 border-t border-emerald-100/15 px-3 py-3 text-sm text-emerald-100/80 sm:px-4 sm:py-4 md:grid-cols-3">
+          <span className="flex min-w-0 items-center gap-2">
+            <CalendarClock className="shrink-0" size={17} /> <span className="min-w-0 truncate">{formatArgentinaTime(match.kickoffAt)} ARG</span>
           </span>
-          <span className="flex items-center gap-2">
-            <MapPin size={18} /> {match.stadium}, {match.city}
+          <span className="flex min-w-0 items-center gap-2">
+            <MapPin className="shrink-0" size={17} /> <span className="min-w-0 truncate">{match.stadium}, {match.city}</span>
           </span>
-          <span className="flex items-center gap-2 md:justify-end">
-            <Tv size={18} /> {channelLabel(match)}
+          <span className="flex min-w-0 items-center gap-2 md:justify-end">
+            <Tv className="shrink-0" size={17} /> <span className="min-w-0 truncate">{channelLabel(match)}</span>
           </span>
         </div>
       </section>
 
-      <section className="mt-5 grid gap-4 sm:grid-cols-3">
+      <section className="mt-3 grid gap-2 sm:mt-5 sm:grid-cols-3 sm:gap-4">
         <StatBadge label="Local" value={home.name} />
         <StatBadge label="Visitante" value={away.name} />
         <StatBadge label="TV" value={channelNote(match, teams)} />
       </section>
 
-      <section className="mt-5 grid gap-4 lg:grid-cols-2">
+      <section className="mt-3 grid gap-3 sm:mt-5 sm:gap-4 lg:grid-cols-2">
         <LineupPanel lineup={homeLineup} team={home} />
         <LineupPanel lineup={awayLineup} team={away} />
       </section>

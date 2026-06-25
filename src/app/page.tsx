@@ -80,19 +80,19 @@ export default async function Home() {
   const liveCount = matches.filter((match) => match.status === "live").length;
 
   return (
-    <main className="relative mx-auto max-w-6xl px-4 py-6 md:py-10">
+    <main className="relative mx-auto max-w-6xl px-2 py-3 sm:px-4 sm:py-6 md:py-10">
       <AutoRefresh seconds={30} />
       <section className="overflow-hidden rounded-lg border border-emerald-100/15 bg-[#062f1d]/95 shadow-2xl shadow-black/30">
-        <div className="grid grid-cols-[44px_1fr_44px] items-center border-b border-emerald-100/15 px-3 py-4">
-          <ChevronLeft className="text-white" />
-          <h1 className="text-center text-lg font-black uppercase text-white">
+        <div className="grid grid-cols-[30px_1fr_30px] items-center border-b border-emerald-100/15 px-2 py-3 sm:grid-cols-[44px_1fr_44px] sm:px-3 sm:py-4">
+          <ChevronLeft className="text-white" size={20} />
+          <h1 className="text-center text-sm font-black uppercase leading-tight text-white sm:text-lg">
             Hoy y proximos 2 dias <span className="text-lime-400">▼</span>
           </h1>
-          <ChevronRight className="justify-self-end text-white" />
+          <ChevronRight className="justify-self-end text-white" size={20} />
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-b border-emerald-100/15 px-4 py-3">
-          <div className="flex gap-5 text-sm font-black uppercase">
+        <div className="flex items-center justify-between gap-2 border-b border-emerald-100/15 px-3 py-2.5 sm:px-4 sm:py-3">
+          <div className="flex gap-4 text-xs font-black uppercase sm:gap-5 sm:text-sm">
             <span className="text-lime-400">Todos</span>
             <span className="text-white">Vivo ({liveCount})</span>
           </div>
@@ -100,14 +100,14 @@ export default async function Home() {
             <span className="hidden rounded-md bg-[#007c19] px-3 py-2 text-xs font-black text-white sm:inline-flex">
               TV Argentina
             </span>
-            <span className="grid size-10 place-items-center rounded-md bg-[#008f12] text-white">
+            <span className="grid size-9 place-items-center rounded-md bg-[#008f12] text-white sm:size-10">
               <Bell size={17} />
             </span>
           </div>
         </div>
 
-        <div className="px-4 py-3">
-          <span className="inline-flex items-center gap-2 text-sm font-bold text-emerald-100/70">
+        <div className="px-3 py-2.5 sm:px-4 sm:py-3">
+          <span className="inline-flex items-center gap-2 text-xs font-bold text-emerald-100/70 sm:text-sm">
             <RefreshCw size={16} /> {isLiveConnected ? "Resultados en vivo" : "Fixture real"}
           </span>
         </div>
@@ -115,7 +115,7 @@ export default async function Home() {
         <div className="px-0 pb-4">
           {matchGroups.map((group) => (
             <section key={group.date}>
-              <div className="border-y border-emerald-100/20 bg-[#052617] px-4 py-2 text-sm font-black uppercase text-white">
+              <div className="border-y border-emerald-100/20 bg-[#052617] px-3 py-2 text-xs font-black uppercase text-white sm:px-4 sm:text-sm">
                 Mundial · {group.title} · {new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short" }).format(new Date(`${group.date}T12:00:00Z`))}
               </div>
               {group.matches.length ? (
@@ -130,8 +130,8 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mt-6 flex flex-col gap-3 rounded-lg border border-emerald-100/15 bg-[#062f1d]/85 p-4 md:flex-row md:items-center md:justify-between">
-        <div>
+      <section className="mt-4 flex flex-col gap-3 rounded-lg border border-emerald-100/15 bg-[#062f1d]/85 p-3 sm:mt-6 sm:p-4 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
           <p className="text-sm font-bold text-white">Fuente: {source}</p>
           <p className="mt-1 text-sm text-emerald-100/65">Horarios en Argentina, formato 24 hs. Canales sujetos a grilla oficial.</p>
         </div>

@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Team } from "@/lib/types";
 
 const sizeClass = {
+  xs: "size-5",
   sm: "size-6",
   md: "size-8",
   lg: "size-12",

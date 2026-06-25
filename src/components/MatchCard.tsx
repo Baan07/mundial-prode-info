@@ -23,9 +23,9 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
 
   return (
     <Link className="block" href={`/partido/${match.id}`}>
-      <article className="grid grid-cols-[78px_1fr] border-t border-emerald-100/20 bg-[#062f1d]/92 transition hover:bg-[#0a3a24] md:grid-cols-[92px_1fr_210px]">
-        <div className="grid place-items-center border-r border-emerald-100/20 px-2 py-3 text-center">
-          <span className="text-xs font-black text-white">{timeOnly(match.kickoffAt)}</span>
+      <article className="grid grid-cols-[58px_minmax(0,1fr)] border-t border-emerald-100/20 bg-[#062f1d]/92 transition hover:bg-[#0a3a24] sm:grid-cols-[72px_minmax(0,1fr)] md:grid-cols-[92px_minmax(0,1fr)_210px]">
+        <div className="grid place-items-center border-r border-emerald-100/20 px-1.5 py-3 text-center sm:px-2">
+          <span className="text-[11px] font-black text-white sm:text-xs">{timeOnly(match.kickoffAt)}</span>
           {match.status !== "scheduled" ? (
             <span className={`mt-1 rounded px-1.5 py-0.5 text-[10px] font-black ${match.status === "live" ? "bg-lime-400 text-green-950" : "bg-black/25 text-lime-200"}`}>
               {match.status === "live" && match.liveMinute ? `${match.liveMinute}'` : statusLabel[match.status]}
@@ -33,25 +33,25 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
           ) : null}
         </div>
 
-        <div className="grid grid-cols-[1fr_48px_1fr] items-center gap-2 px-3 py-3">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_34px_minmax(0,1fr)] items-center gap-1.5 px-2 py-3 sm:grid-cols-[minmax(0,1fr)_42px_minmax(0,1fr)] sm:gap-2 sm:px-3">
           <div className="flex min-w-0 items-center justify-end gap-2 text-right">
-            <span className="truncate text-sm font-black text-white md:text-base">{home.name}</span>
-            <FlagBadge team={home} />
+            <span className="min-w-0 truncate text-[13px] font-black leading-tight text-white sm:text-sm md:text-base">{home.name}</span>
+            <FlagBadge size="sm" team={home} />
           </div>
-          <div className="text-center text-lg font-black text-white">
+          <div className="text-center text-base font-black text-white sm:text-lg">
             {hasScore ? `${match.homeScore}-${match.awayScore}` : "-"}
           </div>
           <div className="flex min-w-0 items-center gap-2">
-            <FlagBadge team={away} />
-            <span className="truncate text-sm font-black text-white md:text-base">{away.name}</span>
+            <FlagBadge size="sm" team={away} />
+            <span className="min-w-0 truncate text-[13px] font-black leading-tight text-white sm:text-sm md:text-base">{away.name}</span>
           </div>
-          <div className="col-span-3 mt-1 truncate text-center text-xs font-bold text-emerald-100/70">
+          <div className="col-span-3 mt-1 truncate text-center text-[11px] font-bold text-emerald-100/70 sm:text-xs">
             {match.stadium}, {match.city}
           </div>
         </div>
 
-        <div className="col-span-2 flex items-center gap-2 border-t border-emerald-100/10 px-3 py-2 text-xs font-bold text-lime-200 md:col-span-1 md:border-l md:border-t-0">
-          <Tv size={15} />
+        <div className="col-span-2 flex min-w-0 items-center gap-2 border-t border-emerald-100/10 px-2.5 py-2 text-[11px] font-bold text-lime-200 sm:px-3 sm:text-xs md:col-span-1 md:border-l md:border-t-0">
+          <Tv className="shrink-0" size={15} />
           <span className="truncate">{channelLabel(match)}</span>
         </div>
       </article>
