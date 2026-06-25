@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CalendarClock, MapPin } from "lucide-react";
+import { CalendarClock, MapPin, Tv } from "lucide-react";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { LineupPanel } from "@/components/LineupPanel";
 import { StatBadge } from "@/components/StatBadge";
+import { channelLabel, channelNote } from "@/lib/broadcast";
 import { formatArgentinaTime, getLineup, getRealMatch, getTeamFromList } from "@/lib/realData";
 
 type Props = { params: Promise<{ id: string }> };
@@ -35,11 +36,11 @@ export default async function MatchPage({ params }: Props) {
   const awayLineup = await getLineup(away.id);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6">
+    <main className="relative mx-auto max-w-5xl px-4 py-6">
       <AutoRefresh seconds={30} />
-      <section className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.055]">
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-          <p className="text-xs font-black uppercase tracking-wide text-sky-300">
+      <section className="overflow-hidden rounded-lg border border-emerald-100/15 bg-[#062f1d]/95 shadow-2xl shadow-black/30">
+        <div className="flex items-center justify-between border-b border-emerald-100/15 px-4 py-3">
+          <p className="text-xs font-black uppercase tracking-wide text-lime-400">
             #{match.matchNumber} · {match.group ? `Grupo ${match.group}` : match.phase}
           </p>
           <span className="rounded-md bg-white/10 px-3 py-1 text-sm font-black text-white">
@@ -67,12 +68,15 @@ export default async function MatchPage({ params }: Props) {
           </div>
         </div>
 
-        <div className="grid gap-3 border-t border-white/10 px-4 py-4 text-sky-100/75 md:grid-cols-2">
+        <div className="grid gap-3 border-t border-emerald-100/15 px-4 py-4 text-emerald-100/80 md:grid-cols-3">
           <span className="flex items-center gap-2">
             <CalendarClock size={18} /> {formatArgentinaTime(match.kickoffAt)} ARG
           </span>
-          <span className="flex items-center gap-2 md:justify-end">
+          <span className="flex items-center gap-2">
             <MapPin size={18} /> {match.stadium}, {match.city}
+          </span>
+          <span className="flex items-center gap-2 md:justify-end">
+            <Tv size={18} /> {channelLabel(match)}
           </span>
         </div>
       </section>
@@ -80,7 +84,7 @@ export default async function MatchPage({ params }: Props) {
       <section className="mt-5 grid gap-4 sm:grid-cols-3">
         <StatBadge label="Local" value={home.name} />
         <StatBadge label="Visitante" value={away.name} />
-        <StatBadge label="Estado" value={match.status === "live" ? "En vivo" : match.status === "finished" ? "Final" : "Por jugar"} />
+        <StatBadge label="TV" value={channelNote(match, teams)} />
       </section>
 
       <section className="mt-5 grid gap-4 lg:grid-cols-2">

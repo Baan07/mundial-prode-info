@@ -18,10 +18,23 @@
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top left, rgba(56, 189, 248, 0.2), transparent 34rem),
-    linear-gradient(135deg, #07111f 0%, #0d1b2d 48%, #061827 100%);
+    linear-gradient(rgba(3, 45, 25, 0.88), rgba(3, 45, 25, 0.9)),
+    radial-gradient(circle at 50% 20%, rgba(113, 211, 71, 0.18), transparent 28rem),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 96px),
+    linear-gradient(135deg, #053d24 0%, #082f1f 48%, #041b13 100%);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 1px), rgba(255,255,255,0.08) calc(50% - 1px), rgba(255,255,255,0.08) calc(50% + 1px), transparent calc(50% + 1px)),
+    radial-gradient(circle at 50% 50%, transparent 0 92px, rgba(255,255,255,0.06) 93px 95px, transparent 96px);
+  opacity: 0.45;
 }
 
 a {

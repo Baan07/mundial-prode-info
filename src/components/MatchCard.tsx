@@ -1,23 +1,20 @@
 import Link from "next/link";
-import { CalendarClock, MapPin } from "lucide-react";
+import { Tv } from "lucide-react";
+import { channelLabel } from "@/lib/broadcast";
 import { formatArgentinaTime, getTeamFromList } from "@/lib/realData";
 import { Match, Team } from "@/lib/types";
 
 const statusLabel = {
-  scheduled: "Por jugar",
-  live: "En vivo",
-  finished: "Final",
+  scheduled: "PROGRAMADO",
+  live: "EN VIVO",
+  finished: "FINAL",
 };
 
-export function MatchCard({
-  match,
-  teams,
-  compact = false,
-}: {
-  match: Match;
-  teams: Team[];
-  compact?: boolean;
-}) {
+function timeOnly(value: string) {
+  return formatArgentinaTime(value).split(",").pop()?.trim() ?? formatArgentinaTime(value);
+}
+
+export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compact?: boolean }) {
   const home = getTeamFromList(teams, match.homeTeamId);
   const away = getTeamFromList(teams, match.awayTeamId);
   if (!home || !away) return null;
@@ -26,51 +23,35 @@ export function MatchCard({
 
   return (
     <Link className="block" href={`/partido/${match.id}`}>
-      <article className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.055] shadow-xl shadow-black/20 transition hover:border-sky-300/50">
-        <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
-          <p className="text-xs font-bold uppercase tracking-wide text-sky-200/75">
-            #{match.matchNumber ?? "--"} · {match.group ? `Grupo ${match.group}` : match.phase}
-          </p>
-          <span
-            className={`rounded-md px-2 py-1 text-xs font-black ${
-              match.status === "live" ? "bg-emerald-400 text-slate-950" : "bg-white/10 text-sky-50"
-            }`}
-          >
-            {match.status === "live" && match.liveMinute ? `${match.liveMinute}' ` : ""}
-            {statusLabel[match.status]}
+      <article className="grid grid-cols-[78px_1fr] border-t border-emerald-100/20 bg-[#062f1d]/92 transition hover:bg-[#0a3a24] md:grid-cols-[92px_1fr_210px]">
+        <div className="grid place-items-center border-r border-emerald-100/20 px-2 py-3 text-center">
+          <span className="text-xs font-black text-white">{timeOnly(match.kickoffAt)}</span>
+          <span className={`mt-1 rounded px-1.5 py-0.5 text-[10px] font-black ${match.status === "live" ? "bg-lime-400 text-green-950" : "bg-black/25 text-lime-200"}`}>
+            {match.status === "live" && match.liveMinute ? `${match.liveMinute}'` : statusLabel[match.status]}
           </span>
         </div>
 
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-5">
-          <div className="min-w-0">
-            <div className="text-4xl leading-none">{home.flag}</div>
-            <h3 className="mt-2 truncate text-lg font-black text-white">{home.name}</h3>
+        <div className="grid grid-cols-[1fr_48px_1fr] items-center gap-2 px-3 py-3">
+          <div className="flex min-w-0 items-center justify-end gap-2 text-right">
+            <span className="truncate text-sm font-black text-white md:text-base">{home.name}</span>
+            <span className="text-3xl">{home.flag}</span>
           </div>
-          <div className="min-w-[76px] rounded-md bg-slate-950 px-3 py-2 text-center">
-            {hasScore ? (
-              <div className="text-3xl font-black text-white">
-                {match.homeScore}-{match.awayScore}
-              </div>
-            ) : (
-              <div className="text-sm font-black text-sky-200">VS</div>
-            )}
+          <div className="text-center text-lg font-black text-white">
+            {hasScore ? `${match.homeScore}-${match.awayScore}` : "-"}
           </div>
-          <div className="min-w-0 text-right">
-            <div className="text-4xl leading-none">{away.flag}</div>
-            <h3 className="mt-2 truncate text-lg font-black text-white">{away.name}</h3>
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="text-3xl">{away.flag}</span>
+            <span className="truncate text-sm font-black text-white md:text-base">{away.name}</span>
+          </div>
+          <div className="col-span-3 mt-1 truncate text-center text-xs font-bold text-emerald-100/70">
+            {match.stadium}, {match.city}
           </div>
         </div>
 
-        {!compact && (
-          <div className="grid gap-2 px-4 pb-4 text-sm text-sky-100/75">
-            <span className="flex items-center gap-2">
-              <CalendarClock size={16} /> {formatArgentinaTime(match.kickoffAt)} ARG
-            </span>
-            <span className="flex items-center gap-2">
-              <MapPin size={16} /> {match.stadium}, {match.city}
-            </span>
-          </div>
-        )}
+        <div className="col-span-2 flex items-center gap-2 border-t border-emerald-100/10 px-3 py-2 text-xs font-bold text-lime-200 md:col-span-1 md:border-l md:border-t-0">
+          <Tv size={15} />
+          <span className="truncate">{channelLabel(match)}</span>
+        </div>
       </article>
     </Link>
   );

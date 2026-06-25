@@ -30,15 +30,15 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="es-AR">
       <body>
-        <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/85 backdrop-blur">
+        <header className="sticky top-0 z-20 border-b border-emerald-100/10 bg-[#052617]/90 backdrop-blur">
           <nav className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
             <Link className="flex items-center gap-2 text-lg font-black text-white" href="/">
-              <span className="grid size-9 place-items-center rounded-md bg-sky-400 text-slate-950"><Trophy size={20} /></span>
+              <span className="grid size-9 place-items-center rounded-md bg-lime-500 text-green-950"><Trophy size={20} /></span>
               Mundial 2026 Info
             </Link>
             <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0">
               {nav.map(([label, href]) => (
-                <Link className="rounded-md px-3 py-2 text-sm font-bold text-sky-100/75 hover:bg-white/10 hover:text-white" href={href} key={href}>
+                <Link className="rounded-md px-3 py-2 text-sm font-bold text-emerald-100/75 hover:bg-white/10 hover:text-white" href={href} key={href}>
                   {label}
                 </Link>
               ))}
@@ -46,7 +46,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </nav>
         </header>
         {children}
-        <footer className="mx-auto max-w-7xl px-4 py-8 text-sm text-sky-100/55">
+        <footer className="relative mx-auto max-w-7xl px-4 py-8 text-sm text-emerald-100/55">
           Fixture, resultados en vivo, equipos, jugadores y formaciones. Horarios en Argentina.
         </footer>
       </body>

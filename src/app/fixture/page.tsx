@@ -10,51 +10,52 @@ export default async function FixturePage() {
   const knockoutMatches = matches.filter((match) => match.phase !== "Fase de grupos");
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-6">
+    <main className="relative mx-auto max-w-6xl px-4 py-6">
       <AutoRefresh seconds={30} />
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-wide text-sky-300">
-            {isLiveConnected ? "Resultados live cada 30s" : "Fixture real · conectar API para goles y formaciones live"}
+      <section className="overflow-hidden rounded-lg border border-emerald-100/15 bg-[#062f1d]/95 shadow-2xl shadow-black/30">
+        <div className="border-b border-emerald-100/15 px-4 py-4">
+          <p className="text-sm font-black uppercase tracking-wide text-lime-400">
+            {isLiveConnected ? "Resultados en vivo cada 30s" : "Fixture real · TV Argentina"}
           </p>
-          <h1 className="mt-2 text-4xl font-black text-white">Fixture 2026</h1>
+          <h1 className="mt-1 text-3xl font-black uppercase text-white">Fixture Mundial 2026</h1>
         </div>
-        <div className="grid gap-2 sm:grid-cols-3">
-          <select className="rounded-md border border-white/10 bg-slate-950 p-3 text-sky-50">
+
+        <div className="grid gap-2 border-b border-emerald-100/15 p-4 sm:grid-cols-3">
+          <select className="rounded-md border border-emerald-100/15 bg-[#052617] p-3 text-white">
             <option>Todos los grupos</option>
             {[...new Set(teams.map((team) => team.group).filter(Boolean))].map((group) => (
               <option key={group}>Grupo {group}</option>
             ))}
           </select>
-          <select className="rounded-md border border-white/10 bg-slate-950 p-3 text-sky-50">
+          <select className="rounded-md border border-emerald-100/15 bg-[#052617] p-3 text-white">
             <option>Todas las selecciones</option>
             {teams.map((team) => (
               <option key={team.id}>{team.name}</option>
             ))}
           </select>
-          <select className="rounded-md border border-white/10 bg-slate-950 p-3 text-sky-50">
+          <select className="rounded-md border border-emerald-100/15 bg-[#052617] p-3 text-white">
             <option>Todos</option>
             <option>Por jugar</option>
             <option>En vivo</option>
             <option>Final</option>
           </select>
         </div>
-      </div>
 
-      <section className="mt-6">
-        <h2 className="mb-3 text-xl font-black text-white">Fase de grupos</h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div>
+          <div className="border-y border-emerald-100/20 bg-[#052617] px-4 py-2 text-sm font-black uppercase text-white">
+            🏆 Fase de grupos
+          </div>
           {groupMatches.map((match) => (
             <MatchCard match={match} teams={teams} key={match.id} />
           ))}
         </div>
-      </section>
 
-      <section className="mt-8">
-        <h2 className="mb-3 text-xl font-black text-white">Eliminacion directa</h2>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div>
+          <div className="border-y border-emerald-100/20 bg-[#052617] px-4 py-2 text-sm font-black uppercase text-white">
+            🏆 Eliminacion directa
+          </div>
           {knockoutMatches.map((match) => (
-            <MatchCard compact match={match} teams={teams} key={match.id} />
+            <MatchCard match={match} teams={teams} key={match.id} />
           ))}
         </div>
       </section>
