@@ -71,6 +71,19 @@ export default async function MatchPage({ params }: Props) {
           </div>
         </div>
 
+        {match.scorers.length ? (
+          <div className="border-t border-emerald-100/15 px-3 py-3 sm:px-4">
+            <p className="text-[11px] font-black uppercase tracking-wide text-lime-300">Goles</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {match.scorers.map((scorer) => (
+                <span className="rounded-md bg-[#052617] px-2.5 py-1 text-xs font-bold text-emerald-50" key={scorer}>
+                  {scorer}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         <div className="grid gap-2 border-t border-emerald-100/15 px-3 py-3 text-sm text-emerald-100/80 sm:px-4 sm:py-4 md:grid-cols-3">
           <span className="flex min-w-0 items-center gap-2">
             <CalendarClock className="shrink-0" size={17} /> <span className="min-w-0 truncate">{formatArgentinaTime(match.kickoffAt)} ARG</span>

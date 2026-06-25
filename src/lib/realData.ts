@@ -5,6 +5,7 @@ import { supabase } from "./supabase";
 import { Position, SquadPlayer, TeamLineup } from "./types";
 
 const FIXTURES_URL = "https://www.thestatsapi.com/world-cup/data/fixtures.json";
+const PROMIEDOS_WORLD_CUP_URL = "https://www.promiedos.com.ar/league/fifa-world-cup/fjda";
 const ARGENTINA_TZ = "America/Argentina/Buenos_Aires";
 
 type StatsApiFixture = {
@@ -26,6 +27,43 @@ type LiveOverlay = {
   awayScore?: number;
   liveMinute?: number;
   scorers?: string[];
+};
+
+type PromiedosGame = {
+  stage_round_name?: string;
+  teams?: Array<{
+    name?: string;
+    short_name?: string;
+    goals?: Array<{
+      player_name?: string;
+      player_sname?: string;
+      time_to_display?: string;
+    }>;
+  }>;
+  scores?: [number, number];
+  status?: {
+    enum?: number;
+    name?: string;
+    short_name?: string;
+  };
+  start_time?: string;
+  game_time?: number;
+  game_time_to_display?: string;
+  game_time_status_to_display?: string;
+};
+
+type PromiedosPageData = {
+  props?: {
+    pageProps?: {
+      data?: {
+        games?: {
+          filters?: Array<{
+            games?: PromiedosGame[];
+          }>;
+        };
+      };
+    };
+  };
 };
 
 type ApiFootballSquadResponse = {
@@ -302,6 +340,15 @@ function statusFromKickoff(kickoffAt: string): MatchStatus {
   return "finished";
 }
 
+function statusFromPromiedos(game: PromiedosGame): MatchStatus | undefined {
+  const raw = `${game.status?.name ?? ""} ${game.status?.short_name ?? ""} ${game.game_time_status_to_display ?? ""}`.toLowerCase();
+  if (game.status?.enum === 3 || raw.includes("final")) return "finished";
+  if (game.status?.enum === 2 || raw.includes("vivo") || raw.includes("entretiempo") || raw.includes("descanso")) return "live";
+  if (game.status?.enum === 1 || raw.includes("prog")) return "scheduled";
+  if (game.game_time && game.game_time > 0 && game.game_time < 130) return "live";
+  return undefined;
+}
+
 function isPlaceholder(name: string) {
   return /group|winner|loser|third place|runners-up/i.test(name);
 }
@@ -412,6 +459,35 @@ function normalizeName(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+}
+
+function fixtureTeamNames(name: string) {
+  return [
+    name,
+    spanishNameByTeam[name],
+    name.replace("IR Iran", "Iran"),
+    name.replace("Cote d'Ivoire", "Costa de Marfil"),
+    name.replace("Congo DR", "RD Congo"),
+    name.replace("Korea Republic", "Corea del Sur"),
+    name.replace("United States", "Estados Unidos"),
+    name.replace("Netherlands", "Paises Bajos"),
+    name.replace("Turkiye", "Turquia"),
+  ].filter(Boolean).map((item) => normalizeName(item));
+}
+
+function sameTeamName(promiedosName: string | undefined, fixtureName: string) {
+  if (!promiedosName) return false;
+  const normalized = normalizeName(promiedosName);
+  return fixtureTeamNames(fixtureName).some((candidate) => candidate === normalized);
+}
+
+function scorersFromPromiedos(game: PromiedosGame) {
+  return (game.teams ?? []).flatMap((team) =>
+    (team.goals ?? []).map((goal) => {
+      const player = goal.player_name ?? goal.player_sname ?? "Gol";
+      return goal.time_to_display ? `${player} ${goal.time_to_display}` : player;
+    }),
+  );
 }
 
 function espnSearchName(teamId: string) {
@@ -593,10 +669,67 @@ async function fetchLiveOverlay(fixtures: StatsApiFixture[]) {
   }
 }
 
+function mergeOverlay(base?: LiveOverlay, next?: LiveOverlay) {
+  if (!base) return next;
+  if (!next) return base;
+  return {
+    status: next.status ?? base.status,
+    homeScore: next.homeScore ?? base.homeScore,
+    awayScore: next.awayScore ?? base.awayScore,
+    liveMinute: next.liveMinute ?? base.liveMinute,
+    scorers: next.scorers?.length ? next.scorers : base.scorers,
+  };
+}
+
+async function fetchPromiedosOverlay(fixtures: StatsApiFixture[]) {
+  try {
+    const response = await fetch(PROMIEDOS_WORLD_CUP_URL, { cache: "no-store" });
+    if (!response.ok) return new Map<string, LiveOverlay>();
+    const html = await response.text();
+    const json = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/)?.[1];
+    if (!json) return new Map<string, LiveOverlay>();
+    const payload = JSON.parse(json) as PromiedosPageData;
+    const games = payload.props?.pageProps?.data?.games?.filters?.flatMap((filter) => filter.games ?? []) ?? [];
+    const overlays = new Map<string, LiveOverlay>();
+
+    for (const game of games) {
+      const home = game.teams?.[0]?.name ?? game.teams?.[0]?.short_name;
+      const away = game.teams?.[1]?.name ?? game.teams?.[1]?.short_name;
+      if (!home || !away) continue;
+      const fixture = fixtures.find((candidate) =>
+        (sameTeamName(home, candidate.homeTeam) && sameTeamName(away, candidate.awayTeam)) ||
+        (sameTeamName(home, candidate.awayTeam) && sameTeamName(away, candidate.homeTeam)),
+      );
+      if (!fixture) continue;
+
+      const homeIsFixtureHome = sameTeamName(home, fixture.homeTeam);
+      const scores = game.scores;
+      const overlay: LiveOverlay = {
+        status: statusFromPromiedos(game),
+        homeScore: scores ? scores[homeIsFixtureHome ? 0 : 1] : undefined,
+        awayScore: scores ? scores[homeIsFixtureHome ? 1 : 0] : undefined,
+        liveMinute: game.game_time && game.game_time > 0 ? game.game_time : undefined,
+        scorers: scorersFromPromiedos(game),
+      };
+      overlays.set(String(fixture.matchNumber), mergeOverlay(overlays.get(String(fixture.matchNumber)), overlay) ?? overlay);
+    }
+
+    return overlays;
+  } catch {
+    return new Map<string, LiveOverlay>();
+  }
+}
+
 export async function getWorldCupData() {
   try {
     const fixtures = await fetchFixtures();
-    const overlays = await fetchLiveOverlay(fixtures);
+    const [promiedosOverlays, apiOverlays] = await Promise.all([
+      fetchPromiedosOverlay(fixtures),
+      fetchLiveOverlay(fixtures),
+    ]);
+    const overlays = new Map<string, LiveOverlay>();
+    for (const [key, overlay] of promiedosOverlays) overlays.set(key, overlay);
+    for (const [key, overlay] of apiOverlays) overlays.set(key, mergeOverlay(overlays.get(key), overlay) ?? overlay);
     const groups = new Map<string, string>();
     for (const fixture of fixtures) {
       if (fixture.group) {
@@ -615,8 +748,8 @@ export async function getWorldCupData() {
       teams: Array.from(teamMap.values()),
       matches: fixtures.map((fixture) => toMatch(fixture, overlays.get(String(fixture.matchNumber)))),
       players: fallbackPlayers,
-      source: "TheStatsAPI fixtures + live API overlay",
-      isLiveConnected: Boolean(process.env.FOOTBALL_API_KEY),
+      source: "TheStatsAPI fixtures + Promiedos live + API overlay",
+      isLiveConnected: Boolean(process.env.FOOTBALL_API_KEY) || promiedosOverlays.size > 0,
     };
   } catch {
     return {
