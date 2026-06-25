@@ -28,6 +28,40 @@ type LiveOverlay = {
   scorers?: string[];
 };
 
+type ApiFootballSquadResponse = {
+  response?: Array<{
+    team?: { id?: number; name?: string };
+    players?: Array<{
+      id?: number;
+      name?: string;
+      age?: number;
+      number?: number;
+      position?: string;
+    }>;
+  }>;
+};
+
+type ApiFootballTeamSearchResponse = {
+  response?: Array<{
+    team?: { id?: number; name?: string; national?: boolean };
+  }>;
+};
+
+type EspnTeamsResponse = {
+  sports?: Array<{
+    leagues?: Array<{
+      teams?: Array<{
+        team?: {
+          id?: string;
+          displayName?: string;
+          shortDisplayName?: string;
+          slug?: string;
+        };
+      }>;
+    }>;
+  }>;
+};
+
 const flagByTeam: Record<string, string> = {
   Algeria: "🇩🇿",
   Argentina: "🇦🇷",
@@ -199,6 +233,37 @@ const strengthByTeam: Record<string, number> = {
   Japan: 78,
 };
 
+const apiFootballTeamNameById: Record<string, string> = {
+  "cabo-verde": "Cape Verde",
+  "congo-dr": "Congo DR",
+  "cote-d-ivoire": "Ivory Coast",
+  curacao: "Curacao",
+  england: "England",
+  "ir-iran": "Iran",
+  "korea-republic": "South Korea",
+  netherlands: "Netherlands",
+  "new-zealand": "New Zealand",
+  "saudi-arabia": "Saudi Arabia",
+  scotland: "Scotland",
+  turkiye: "Turkey",
+  "united-states": "USA",
+};
+
+const espnTeamNameById: Record<string, string> = {
+  "bosnia-and-herzegovina": "Bosnia-Herzegovina",
+  "cabo-verde": "Cape Verde",
+  "congo-dr": "Congo DR",
+  "cote-d-ivoire": "Ivory Coast",
+  curacao: "Curaçao",
+  czechia: "Czechia",
+  "ir-iran": "Iran",
+  "korea-republic": "South Korea",
+  "new-zealand": "New Zealand",
+  "saudi-arabia": "Saudi Arabia",
+  turkiye: "Türkiye",
+  "united-states": "United States",
+};
+
 function slug(value: string) {
   return value
     .toLowerCase()
@@ -321,6 +386,171 @@ function apiFootballStatus(shortStatus?: string): MatchStatus | undefined {
   return undefined;
 }
 
+function squadPosition(value?: string): Position {
+  const normalized = (value ?? "").toLowerCase();
+  if (normalized === "g" || normalized.includes("goal")) return "Arquero";
+  if (normalized === "d" || normalized.includes("def")) return "Defensor";
+  if (normalized === "m" || normalized.includes("mid")) return "Mediocampista";
+  return "Delantero";
+}
+
+function decodeHtml(value: string) {
+  return value
+    .replace(/&#x27;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/<[^>]*>/g, "")
+    .trim();
+}
+
+function normalizeName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function espnSearchName(teamId: string) {
+  return espnTeamNameById[teamId] ?? apiFootballSearchName(teamId);
+}
+
+function apiFootballSearchName(teamId: string) {
+  return apiFootballTeamNameById[teamId] ?? teamId.replace(/-/g, " ");
+}
+
+async function searchEspnTeamId(teamId: string) {
+  try {
+    const response = await fetch("https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/teams", {
+      next: { revalidate: 60 * 60 * 24 },
+    });
+    if (!response.ok) return undefined;
+    const payload = await response.json() as EspnTeamsResponse;
+    const teams = payload.sports?.[0]?.leagues?.[0]?.teams ?? [];
+    const target = normalizeName(espnSearchName(teamId));
+    const match = teams.find((item) => {
+      const team = item.team;
+      return [team?.displayName, team?.shortDisplayName, team?.slug].some((value) => value && normalizeName(value) === target);
+    });
+    return match?.team?.id;
+  } catch {
+    return undefined;
+  }
+}
+
+function parseEspnSquad(html: string, teamId: string): TeamLineup | undefined {
+  const rows = html.match(/<tr class="Table__TR[\s\S]*?<\/tr>/g) ?? [];
+  const fallback = getFallbackLineup(teamId);
+  const clubByName = new Map(fallback.players.map((player) => [normalizeName(player.name), player.currentClub]));
+  const clubCountryByName = new Map(fallback.players.map((player) => [normalizeName(player.name), player.clubCountry]));
+  const players: SquadPlayer[] = [];
+
+  for (const row of rows) {
+    const nameMatch = row.match(/data-resource-id="AthleteName"[^>]*>([^<]+)<\/a>/);
+    if (!nameMatch) continue;
+    const positionMatch = row.match(/<td class="Table__TD"><div class="inline">([^<]*)<\/div><\/td>/);
+    const numberMatch = row.match(/<span class="pl2 roster-jersey">([^<]+)<\/span>/);
+    const name = decodeHtml(nameMatch[1]);
+    const normalized = normalizeName(name);
+    players.push({
+      name,
+      position: squadPosition(decodeHtml(positionMatch?.[1] ?? "")),
+      shirtNumber: numberMatch ? Number(decodeHtml(numberMatch[1])) || undefined : undefined,
+      currentClub: clubByName.get(normalized) ?? "Club por confirmar",
+      clubCountry: clubCountryByName.get(normalized) ?? "",
+      starter: true,
+    });
+  }
+
+  if (players.length < 11) return undefined;
+  return {
+    teamId,
+    formation: fallback.formation === "Pendiente" ? "Plantel" : fallback.formation,
+    source: "api",
+    players: players.slice(0, 26),
+  };
+}
+
+async function fetchEspnLineup(teamId: string) {
+  const espnTeamId = await searchEspnTeamId(teamId);
+  if (!espnTeamId) return undefined;
+
+  try {
+    const response = await fetch(`https://www.espn.com/soccer/team/squad/_/id/${espnTeamId}/league/FIFA.WORLD`, {
+      next: { revalidate: 60 * 60 * 24 },
+    });
+    if (!response.ok) return undefined;
+    return parseEspnSquad(await response.text(), teamId);
+  } catch {
+    return undefined;
+  }
+}
+
+async function searchApiFootballTeamId(teamId: string) {
+  const key = process.env.FOOTBALL_API_KEY;
+  const baseUrl = process.env.FOOTBALL_API_BASE_URL ?? "https://v3.football.api-sports.io";
+  if (!key) return undefined;
+
+  try {
+    const response = await fetch(`${baseUrl.replace(/\/$/, "")}/teams?name=${encodeURIComponent(apiFootballSearchName(teamId))}`, {
+      headers: { "x-apisports-key": key },
+      next: { revalidate: 60 * 60 * 24 },
+    });
+    if (!response.ok) return undefined;
+    const payload = await response.json() as ApiFootballTeamSearchResponse;
+    const nationalTeam = payload.response?.find((item) => item.team?.national && item.team.id);
+    return nationalTeam?.team?.id ?? payload.response?.find((item) => item.team?.id)?.team?.id;
+  } catch {
+    return undefined;
+  }
+}
+
+async function fetchApiFootballLineup(teamId: string) {
+  const key = process.env.FOOTBALL_API_KEY;
+  const baseUrl = process.env.FOOTBALL_API_BASE_URL ?? "https://v3.football.api-sports.io";
+  if (!key) return undefined;
+
+  const apiTeamId = await searchApiFootballTeamId(teamId);
+  if (!apiTeamId) return undefined;
+
+  try {
+    const response = await fetch(`${baseUrl.replace(/\/$/, "")}/players/squads?team=${apiTeamId}`, {
+      headers: { "x-apisports-key": key },
+      next: { revalidate: 60 * 60 * 24 },
+    });
+    if (!response.ok) return undefined;
+    const payload = await response.json() as ApiFootballSquadResponse;
+    const players = payload.response?.[0]?.players ?? [];
+    if (players.length < 11) return undefined;
+
+    const fallback = getFallbackLineup(teamId);
+    const clubByName = new Map(fallback.players.map((player) => [player.name.toLowerCase(), player.currentClub]));
+    const clubCountryByName = new Map(fallback.players.map((player) => [player.name.toLowerCase(), player.clubCountry]));
+
+    return {
+      teamId,
+      formation: fallback.formation === "Pendiente" ? "Plantel" : fallback.formation,
+      source: "api",
+      players: players.slice(0, 26).map<SquadPlayer>((player) => {
+        const keyName = (player.name ?? "").toLowerCase();
+        return {
+          name: player.name ?? "Jugador",
+          position: squadPosition(player.position),
+          shirtNumber: player.number,
+          currentClub: clubByName.get(keyName) ?? "Club por confirmar",
+          clubCountry: clubCountryByName.get(keyName) ?? "",
+          starter: true,
+        };
+      }),
+    } as TeamLineup;
+  } catch {
+    return undefined;
+  }
+}
+
 async function fetchLiveOverlay(fixtures: StatsApiFixture[]) {
   const key = process.env.FOOTBALL_API_KEY;
   const baseUrl = process.env.FOOTBALL_API_BASE_URL ?? "https://v3.football.api-sports.io";
@@ -439,6 +669,12 @@ export async function getLineup(teamId: string) {
       } as TeamLineup;
     }
   }
+
+  const espnLineup = await fetchEspnLineup(teamId);
+  if (espnLineup) return espnLineup;
+
+  const apiLineup = await fetchApiFootballLineup(teamId);
+  if (apiLineup) return apiLineup;
 
   return getFallbackLineup(teamId);
 }

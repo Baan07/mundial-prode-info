@@ -1,4 +1,5 @@
 import { TeamLineup } from "./types";
+import { Position, SquadPlayer } from "./types";
 
 export const fallbackLineups: Record<string, TeamLineup> = {
   argentina: {
@@ -494,13 +495,53 @@ const allFallbackLineups = {
   ...extraLineups,
 };
 
+const formationPositions: Record<string, Position[]> = {
+  "3-4-3": ["Arquero", "Defensor", "Defensor", "Defensor", "Mediocampista", "Mediocampista", "Mediocampista", "Mediocampista", "Delantero", "Delantero", "Delantero"],
+  "3-4-2-1": ["Arquero", "Defensor", "Defensor", "Defensor", "Mediocampista", "Mediocampista", "Mediocampista", "Mediocampista", "Delantero", "Delantero", "Delantero"],
+  "4-2-3-1": ["Arquero", "Defensor", "Defensor", "Defensor", "Defensor", "Mediocampista", "Mediocampista", "Mediocampista", "Mediocampista", "Mediocampista", "Delantero"],
+  "4-3-3": ["Arquero", "Defensor", "Defensor", "Defensor", "Defensor", "Mediocampista", "Mediocampista", "Mediocampista", "Delantero", "Delantero", "Delantero"],
+  "4-4-2": ["Arquero", "Defensor", "Defensor", "Defensor", "Defensor", "Mediocampista", "Mediocampista", "Mediocampista", "Mediocampista", "Delantero", "Delantero"],
+  "5-4-1": ["Arquero", "Defensor", "Defensor", "Defensor", "Defensor", "Defensor", "Mediocampista", "Mediocampista", "Mediocampista", "Mediocampista", "Delantero"],
+};
+
+function completeLineup(lineup: TeamLineup): TeamLineup {
+  const targetPositions = formationPositions[lineup.formation] ?? formationPositions["4-3-3"];
+  if (lineup.players.length >= 11) return lineup;
+
+  const usedPositions = new Map<Position, number>();
+  for (const player of lineup.players) {
+    usedPositions.set(player.position, (usedPositions.get(player.position) ?? 0) + 1);
+  }
+
+  const missingPlayers: SquadPlayer[] = [];
+  for (const position of targetPositions) {
+    const needed = targetPositions.filter((item) => item === position).length;
+    const used = usedPositions.get(position) ?? 0;
+    const queued = missingPlayers.filter((item) => item.position === position).length;
+    if (used + queued >= needed) continue;
+    missingPlayers.push({
+      name: `${position} ${used + queued + 1} por confirmar`,
+      position,
+      currentClub: "Club por confirmar",
+      clubCountry: "",
+      starter: true,
+    });
+  }
+
+  return {
+    ...lineup,
+    players: [...lineup.players, ...missingPlayers].slice(0, 11),
+  };
+}
+
 export function getFallbackLineup(teamId: string): TeamLineup {
-  return allFallbackLineups[teamId] ?? {
+  const lineup = allFallbackLineups[teamId] ?? {
     teamId,
-    formation: "Pendiente",
-    source: "pending",
+    formation: "4-3-3",
+    source: "seed",
     players: [],
   };
+  return completeLineup(lineup);
 }
 
 export function getFallbackPlayers() {

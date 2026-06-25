@@ -15,7 +15,7 @@ export function LineupPanel({ team, lineup }: { team: Team; lineup: TeamLineup }
           <p className="text-sm text-sky-100/65">Formacion: {lineup.formation}</p>
         </div>
         <span className="rounded-md bg-[#052617] px-3 py-2 text-xs font-black uppercase text-lime-300">
-          {lineup.source === "api" ? "Confirmada" : lineup.source === "seed" ? "Base local" : "Pendiente"}
+          {lineup.source === "api" ? "Plantel API" : lineup.source === "seed" ? "Base local" : "Pendiente"}
         </span>
       </div>
 
