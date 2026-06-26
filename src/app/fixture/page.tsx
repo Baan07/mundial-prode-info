@@ -1,5 +1,6 @@
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { MatchCard } from "@/components/MatchCard";
+import { StandingsTable } from "@/components/StandingsTable";
 import { getWorldCupData } from "@/lib/realData";
 
 export const revalidate = 30;
@@ -8,6 +9,7 @@ export default async function FixturePage() {
   const { matches, teams, isLiveConnected } = await getWorldCupData();
   const groupMatches = matches.filter((match) => match.phase === "Fase de grupos");
   const knockoutMatches = matches.filter((match) => match.phase !== "Fase de grupos");
+  const groups = [...new Set(teams.map((team) => team.group).filter(Boolean))].sort();
 
   return (
     <main className="relative mx-auto max-w-6xl px-2 py-3 sm:px-4 sm:py-6">
@@ -23,7 +25,7 @@ export default async function FixturePage() {
         <div className="grid gap-2 border-b border-emerald-100/15 p-3 sm:grid-cols-3 sm:p-4">
           <select className="min-w-0 rounded-md border border-emerald-100/15 bg-[#052617] p-2.5 text-sm text-white sm:p-3">
             <option>Todos los grupos</option>
-            {[...new Set(teams.map((team) => team.group).filter(Boolean))].map((group) => (
+            {groups.map((group) => (
               <option key={group}>Grupo {group}</option>
             ))}
           </select>
@@ -39,6 +41,15 @@ export default async function FixturePage() {
             <option>En vivo</option>
             <option>Final</option>
           </select>
+        </div>
+
+        <div className="border-b border-emerald-100/15 bg-[#041f13] px-3 py-3 sm:px-4 sm:py-4">
+          <div className="mb-3 text-xs font-black uppercase text-lime-400 sm:text-sm">Tabla de posiciones por zona</div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {groups.map((group) => (
+              <StandingsTable group={group} key={group} teams={teams.filter((team) => team.group === group)} />
+            ))}
+          </div>
         </div>
 
         <div>

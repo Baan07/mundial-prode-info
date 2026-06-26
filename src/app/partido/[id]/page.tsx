@@ -39,6 +39,8 @@ export default async function MatchPage({ params }: Props) {
   if (!home || !away) notFound();
 
   const hasScore = match.homeScore !== undefined && match.awayScore !== undefined;
+  const homeScorers = match.homeScorers ?? [];
+  const awayScorers = match.awayScorers ?? [];
   const homeLineup = await getLineup(home.id);
   const awayLineup = await getLineup(away.id);
 
@@ -59,6 +61,15 @@ export default async function MatchPage({ params }: Props) {
           <div className="min-w-0">
             <FlagBadge size="lg" team={home} />
             <h1 className="mt-2 truncate text-xl font-black text-white sm:mt-3 sm:text-2xl md:text-4xl">{home.name}</h1>
+            {homeScorers.length ? (
+              <div className="mt-2 flex flex-col items-start gap-1">
+                {homeScorers.map((scorer) => (
+                  <span className="max-w-full truncate rounded-md bg-[#052617] px-2 py-1 text-[11px] font-bold text-lime-100 sm:text-xs" key={scorer}>
+                    {scorer}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
           <div className="rounded-lg bg-slate-950 px-2 py-3 text-center sm:px-5 sm:py-4">
             {hasScore ? (
@@ -74,21 +85,17 @@ export default async function MatchPage({ params }: Props) {
               <FlagBadge size="lg" team={away} />
             </div>
             <h2 className="mt-2 truncate text-xl font-black text-white sm:mt-3 sm:text-2xl md:text-4xl">{away.name}</h2>
+            {awayScorers.length ? (
+              <div className="mt-2 flex flex-col items-end gap-1">
+                {awayScorers.map((scorer) => (
+                  <span className="max-w-full truncate rounded-md bg-[#052617] px-2 py-1 text-[11px] font-bold text-lime-100 sm:text-xs" key={scorer}>
+                    {scorer}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
-
-        {match.scorers.length ? (
-          <div className="border-t border-emerald-100/15 px-3 py-3 sm:px-4">
-            <p className="text-[11px] font-black uppercase tracking-wide text-lime-300">Goles</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {match.scorers.map((scorer) => (
-                <span className="rounded-md bg-[#052617] px-2.5 py-1 text-xs font-bold text-emerald-50" key={scorer}>
-                  {scorer}
-                </span>
-              ))}
-            </div>
-          </div>
-        ) : null}
 
         <div className="grid gap-2 border-t border-emerald-100/15 px-3 py-3 text-sm text-emerald-100/80 sm:px-4 sm:py-4 md:grid-cols-3">
           <span className="flex min-w-0 items-center gap-2">

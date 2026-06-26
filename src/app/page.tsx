@@ -25,6 +25,17 @@ function todayInArgentina() {
   }).format(new Date());
 }
 
+function argentinaHour(value: string) {
+  return Number(
+    new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      hour12: false,
+      hourCycle: "h23",
+      timeZone: "America/Argentina/Buenos_Aires",
+    }).format(new Date(value)),
+  );
+}
+
 function addDays(date: string, days: number) {
   const [year, month, day] = date.split("-").map(Number);
   const value = new Date(Date.UTC(year, month - 1, day + days, 12));
@@ -43,6 +54,18 @@ function dayTitle(date: string, index: number) {
   }).format(new Date(`${date}T12:00:00Z`));
 }
 
+function isLateNightCarryover(match: Match, today: string) {
+  const previousDay = addDays(today, -1);
+  const kickoff = new Date(match.kickoffAt).getTime();
+  const fourHours = 4 * 60 * 60 * 1000;
+  return argentinaDate(match.kickoffAt) === previousDay && argentinaHour(match.kickoffAt) >= 23 && Date.now() <= kickoff + fourHours;
+}
+
+function belongsToVisibleDate(match: Match, date: string, index: number, today: string) {
+  if (argentinaDate(match.kickoffAt) === date) return true;
+  return index === 0 && isLateNightCarryover(match, today);
+}
+
 function visibleMatchGroups(matches: Match[]) {
   const today = todayInArgentina();
   const dates = [today, addDays(today, 1), addDays(today, 2)];
@@ -50,7 +73,7 @@ function visibleMatchGroups(matches: Match[]) {
     date,
     title: dayTitle(date, index),
     matches: matches
-      .filter((match) => argentinaDate(match.kickoffAt) === date)
+      .filter((match) => belongsToVisibleDate(match, date, index, today))
       .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime()),
   }));
 

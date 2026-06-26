@@ -65,6 +65,8 @@ export type Match = {
   homeScore?: number;
   awayScore?: number;
   liveMinute?: number;
+  homeScorers?: string[];
+  awayScorers?: string[];
   scorers: string[];
   importance: number;
   sourceUrl?: string;
