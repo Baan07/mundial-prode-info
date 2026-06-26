@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const home = getTeamFromList(teams, match.homeTeamId);
   const away = getTeamFromList(teams, match.awayTeamId);
   return {
-    title: `${home?.name} vs ${away?.name} | Mundial 2026 Info`,
+    title: `${home?.name} vs ${away?.name} | MundialData`,
     description: `${home?.name} vs ${away?.name}: horario Argentina, estadio, estado, jugadores y formaciones.`,
   };
 }

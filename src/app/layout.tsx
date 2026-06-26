@@ -4,11 +4,11 @@ import { Trophy } from "lucide-react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mundial 2026 Info",
+  title: "MundialData",
   description: "Partidos, resultados en vivo, equipos, jugadores y formaciones del Mundial 2026.",
   manifest: "/manifest.json",
   openGraph: {
-    title: "Mundial 2026 Info",
+    title: "MundialData",
     description: "Partidos, resultados en vivo, equipos, jugadores y formaciones del Mundial 2026.",
     type: "website",
   },
@@ -34,7 +34,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <nav className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
             <Link className="flex items-center gap-2 text-lg font-black text-white" href="/">
               <span className="grid size-9 place-items-center rounded-md bg-lime-500 text-green-950"><Trophy size={20} /></span>
-              Mundial 2026 Info
+              MundialData
             </Link>
             <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0">
               {nav.map(([label, href]) => (
@@ -47,7 +47,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </header>
         {children}
         <footer className="relative mx-auto max-w-7xl px-4 py-8 text-sm text-emerald-100/55">
-          Fixture, resultados en vivo, equipos, jugadores y formaciones. Horarios en Argentina.
+          <p>Fixture, resultados en vivo, equipos, jugadores y formaciones. Horarios en Argentina.</p>
+          <p className="mt-2 font-bold text-emerald-100/75">
+            Pagina creada por Matias Flores - matiasflores07@icloud.com
+          </p>
         </footer>
       </body>
     </html>

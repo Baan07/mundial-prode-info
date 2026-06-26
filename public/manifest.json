@@ -1,7 +1,7 @@
 {
-  "name": "Mundial Prode Info",
-  "short_name": "Prode 2026",
-  "description": "Fixture, predicciones y prodes recreativos del Mundial 2026.",
+  "name": "MundialData",
+  "short_name": "MundialData",
+  "description": "Fixture, resultados en vivo, equipos, jugadores y formaciones del Mundial 2026.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#07111f",
