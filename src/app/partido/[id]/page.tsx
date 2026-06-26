@@ -12,6 +12,12 @@ type Props = { params: Promise<{ id: string }> };
 
 export const revalidate = 30;
 
+const statusBadgeClass = {
+  scheduled: "bg-white/10 text-white",
+  live: "bg-lime-400 text-green-950",
+  finished: "bg-slate-200 text-slate-900",
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const { match, teams } = await getRealMatch(id);
@@ -44,7 +50,7 @@ export default async function MatchPage({ params }: Props) {
           <p className="min-w-0 truncate text-[11px] font-black uppercase tracking-wide text-lime-400 sm:text-xs">
             #{match.matchNumber} · {match.group ? `Grupo ${match.group}` : match.phase}
           </p>
-          <span className="shrink-0 rounded-md bg-white/10 px-2.5 py-1 text-xs font-black text-white sm:px-3 sm:text-sm">
+          <span className={`shrink-0 rounded-md px-2.5 py-1 text-xs font-black sm:px-3 sm:text-sm ${statusBadgeClass[match.status]}`}>
             {match.status === "live" ? "En vivo" : match.status === "finished" ? "Final" : "Por jugar"}
           </span>
         </div>

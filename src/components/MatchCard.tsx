@@ -10,6 +10,29 @@ const statusLabel = {
   finished: "FINAL",
 };
 
+const rowStyle = {
+  scheduled: "border-emerald-100/20 bg-[#062f1d]/92 hover:bg-[#0a3a24]",
+  live: "border-l-4 border-lime-400 border-t-lime-300/45 bg-[#12451f]/95 shadow-[inset_0_0_0_1px_rgba(163,230,53,0.22)] hover:bg-[#175526]",
+  finished: "border-t-slate-300/18 bg-[#183044]/92 opacity-90 hover:bg-[#203a51]",
+};
+
+const badgeStyle = {
+  live: "bg-lime-400 text-green-950",
+  finished: "bg-slate-200 text-slate-900",
+};
+
+const timeBorderStyle = {
+  scheduled: "border-emerald-100/20",
+  live: "border-lime-300/35",
+  finished: "border-slate-200/20",
+};
+
+const tvStyle = {
+  scheduled: "border-emerald-100/10 text-lime-200",
+  live: "border-lime-300/25 text-lime-100",
+  finished: "border-slate-200/15 text-slate-200",
+};
+
 function timeOnly(value: string) {
   return formatArgentinaTime(value).split(",").pop()?.trim() ?? formatArgentinaTime(value);
 }
@@ -23,11 +46,11 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
 
   return (
     <Link className="block" href={`/partido/${match.id}`}>
-      <article className="grid grid-cols-[58px_minmax(0,1fr)] border-t border-emerald-100/20 bg-[#062f1d]/92 transition hover:bg-[#0a3a24] sm:grid-cols-[72px_minmax(0,1fr)] md:grid-cols-[92px_minmax(0,1fr)_210px]">
-        <div className="grid place-items-center border-r border-emerald-100/20 px-1.5 py-3 text-center sm:px-2">
+      <article className={`grid grid-cols-[58px_minmax(0,1fr)] border-t transition sm:grid-cols-[72px_minmax(0,1fr)] md:grid-cols-[92px_minmax(0,1fr)_210px] ${rowStyle[match.status]}`}>
+        <div className={`grid place-items-center border-r px-1.5 py-3 text-center sm:px-2 ${timeBorderStyle[match.status]}`}>
           <span className="text-[11px] font-black text-white sm:text-xs">{timeOnly(match.kickoffAt)}</span>
           {match.status !== "scheduled" ? (
-            <span className={`mt-1 rounded px-1.5 py-0.5 text-[10px] font-black ${match.status === "live" ? "bg-lime-400 text-green-950" : "bg-black/25 text-lime-200"}`}>
+            <span className={`mt-1 rounded px-1.5 py-0.5 text-[10px] font-black ${badgeStyle[match.status]}`}>
               {match.status === "live" && match.liveMinute ? `${match.liveMinute}'` : statusLabel[match.status]}
             </span>
           ) : null}
@@ -50,7 +73,7 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
           </div>
         </div>
 
-        <div className="col-span-2 flex min-w-0 items-center gap-2 border-t border-emerald-100/10 px-2.5 py-2 text-[11px] font-bold text-lime-200 sm:px-3 sm:text-xs md:col-span-1 md:border-l md:border-t-0">
+        <div className={`col-span-2 flex min-w-0 items-center gap-2 border-t px-2.5 py-2 text-[11px] font-bold sm:px-3 sm:text-xs md:col-span-1 md:border-l md:border-t-0 ${tvStyle[match.status]}`}>
           <Tv className="shrink-0" size={15} />
           <span className="truncate">{channelLabel(match)}</span>
         </div>
