@@ -1,4 +1,5 @@
 import { matches as fallbackMatches, players as fallbackPlayers, teams as fallbackTeams } from "./data";
+import { formatArgentinaTime, getTeamFromList } from "./matchUtils";
 import { Match, MatchStatus, Team } from "./types";
 import { getFallbackLineup } from "./squads";
 import { supabase } from "./supabase";
@@ -8,7 +9,6 @@ const FIXTURES_URL = "https://www.thestatsapi.com/world-cup/data/fixtures.json";
 const PROMIEDOS_WORLD_CUP_URL = "https://www.promiedos.com.ar/league/fifa-world-cup/fjda";
 const PROMIEDOS_API_URL = "https://api.promiedos.com.ar";
 const PROMIEDOS_VERSION = "1.11.7.3";
-const ARGENTINA_TZ = "America/Argentina/Buenos_Aires";
 
 type StatsApiFixture = {
   matchNumber: number;
@@ -480,6 +480,8 @@ function fixtureTeamNames(name: string) {
     name.replace("IR Iran", "Iran"),
     name.replace("Cote d'Ivoire", "Costa de Marfil"),
     name.replace("Congo DR", "RD Congo"),
+    name.replace("Bosnia and Herzegovina", "Bosnia Herzegovina"),
+    name.replace("Bosnia and Herzegovina", "Bosnia-Herzegovina"),
     name.replace("Korea Republic", "Corea del Sur"),
     name.replace("United States", "Estados Unidos"),
     name.replace("Netherlands", "Paises Bajos"),
@@ -926,19 +928,4 @@ export async function getLineup(teamId: string) {
   return getFallbackLineup(teamId);
 }
 
-export function getTeamFromList(teams: Team[], id: string) {
-  return teams.find((team) => team.id === id);
-}
-
-export function formatArgentinaTime(value: string) {
-  return new Intl.DateTimeFormat("es-AR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-    hourCycle: "h23",
-    timeZone: ARGENTINA_TZ,
-  }).format(new Date(value));
-}
+export { formatArgentinaTime, getTeamFromList };

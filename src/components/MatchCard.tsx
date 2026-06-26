@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Tv } from "lucide-react";
 import { FlagBadge } from "@/components/FlagBadge";
 import { channelLabel } from "@/lib/broadcast";
-import { formatArgentinaTime, getTeamFromList } from "@/lib/realData";
+import { formatArgentinaTime, getTeamFromList } from "@/lib/matchUtils";
 import { Match, Team } from "@/lib/types";
 
 const statusLabel = {
