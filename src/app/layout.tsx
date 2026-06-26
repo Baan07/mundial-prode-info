@@ -1,7 +1,21 @@
 import type { Metadata, Viewport } from "next";
+import { Bebas_Neue, Nunito_Sans } from "next/font/google";
 import Link from "next/link";
 import { Trophy } from "lucide-react";
 import "./globals.css";
+
+const nunito = Nunito_Sans({
+  subsets: ["latin"],
+  variable: "--font-nunito",
+  display: "swap",
+});
+
+const bebas = Bebas_Neue({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-bebas",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "MundialData",
@@ -28,13 +42,19 @@ const nav = [
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es-AR">
+    <html className={`${nunito.variable} ${bebas.variable}`} lang="es-AR">
       <body>
         <header className="sticky top-0 z-20 border-b border-emerald-100/10 bg-[#052617]/90 backdrop-blur">
           <nav className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
-            <Link className="flex items-center gap-2 text-lg font-black text-white" href="/">
-              <span className="grid size-9 place-items-center rounded-md bg-lime-500 text-green-950"><Trophy size={20} /></span>
-              MundialData
+            <Link className="flex items-center gap-3 text-white" href="/">
+              <span className="relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-lg border border-lime-200/45 bg-gradient-to-br from-lime-300 via-emerald-400 to-cyan-200 text-green-950 shadow-lg shadow-lime-950/35">
+                <span className="absolute inset-x-1 bottom-1 h-2 rounded-full border border-green-950/25" />
+                <Trophy className="relative z-10" size={26} strokeWidth={2.7} />
+              </span>
+              <span className="leading-none">
+                <span className="block font-display text-3xl text-white">MundialData</span>
+                <span className="block text-[11px] font-black uppercase text-lime-300">Copa Mundial 2026</span>
+              </span>
             </Link>
             <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0">
               {nav.map(([label, href]) => (
