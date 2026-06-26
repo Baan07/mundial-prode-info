@@ -19,11 +19,11 @@ const bebas = Bebas_Neue({
 
 export const metadata: Metadata = {
   title: "MundialData",
-  description: "Partidos, resultados en vivo, equipos, jugadores y formaciones del Mundial 2026.",
+  description: "Partidos, resultados en vivo, equipos, goleadores y formaciones del Mundial 2026.",
   manifest: "/manifest.json",
   openGraph: {
     title: "MundialData",
-    description: "Partidos, resultados en vivo, equipos, jugadores y formaciones del Mundial 2026.",
+    description: "Partidos, resultados en vivo, equipos, goleadores y formaciones del Mundial 2026.",
     type: "website",
   },
 };
@@ -37,7 +37,7 @@ export const viewport: Viewport = {
 const nav = [
   ["Fixture", "/fixture"],
   ["Equipos", "/equipos"],
-  ["Jugadores", "/jugadores"],
+  ["Goleadores", "/goleadores"],
 ];
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -67,7 +67,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </header>
         {children}
         <footer className="relative mx-auto max-w-7xl px-4 py-8 text-sm text-emerald-100/55">
-          <p>Fixture, resultados en vivo, equipos, jugadores y formaciones. Horarios en Argentina.</p>
+          <p>Fixture, resultados en vivo, equipos, goleadores y formaciones. Horarios en Argentina.</p>
           <p className="mt-2 font-bold text-emerald-100/75">
             Pagina creada por Matias Flores - matiasflores07@icloud.com
           </p>

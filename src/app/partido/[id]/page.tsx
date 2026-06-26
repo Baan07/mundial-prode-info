@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const away = getTeamFromList(teams, match.awayTeamId);
   return {
     title: `${home?.name} vs ${away?.name} | MundialData`,
-    description: `${home?.name} vs ${away?.name}: horario Argentina, estadio, estado, jugadores y formaciones.`,
+    description: `${home?.name} vs ${away?.name}: horario Argentina, estadio, estado, planteles y formaciones.`,
   };
 }
 

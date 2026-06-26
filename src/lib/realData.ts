@@ -42,6 +42,7 @@ type PromiedosGame = {
       player_name?: string;
       player_sname?: string;
       time_to_display?: string;
+      goal_type?: string;
     }>;
   }>;
   scores?: [number, number];
@@ -363,6 +364,19 @@ function isPlaceholder(name: string) {
   return /group|winner|loser|third place|runners-up/i.test(name);
 }
 
+function translatePlaceholderTeamName(name: string) {
+  return name
+    .replace(/^Group ([A-Z]) winners$/i, "Ganador Grupo $1")
+    .replace(/^Group ([A-Z]) runners-up$/i, "Segundo Grupo $1")
+    .replace(/^Group ([A-Z/]+) third place$/i, "Mejor tercero Grupo $1")
+    .replace(/^Winner match (\d+)$/i, "Ganador partido $1")
+    .replace(/^Loser match (\d+)$/i, "Perdedor partido $1")
+    .replace(/\bGroup\b/gi, "Grupo")
+    .replace(/\bwinners\b/gi, "Ganador")
+    .replace(/\brunners-up\b/gi, "Segundo")
+    .replace(/\bthird place\b/gi, "Mejor tercero");
+}
+
 function flagUrlForTeam(name: string) {
   const code = flagCodeByTeam[name];
   return code ? `https://flagcdn.com/w80/${code}.png` : undefined;
@@ -371,11 +385,12 @@ function flagUrlForTeam(name: string) {
 function toTeam(name: string, group = ""): Team {
   const existing = fallbackTeams.find((team) => team.name === name || team.countryCode === name);
   const flagCode = flagCodeByTeam[name];
+  const displayName = isPlaceholder(name) ? translatePlaceholderTeamName(name) : spanishNameByTeam[name];
   if (existing) {
     return {
       ...existing,
       id: slug(name),
-      name: spanishNameByTeam[name] ?? existing.name,
+      name: displayName ?? existing.name,
       flag: flagByTeam[name] ?? existing.flag,
       flagCode,
       flagUrl: flagUrlForTeam(name),
@@ -385,7 +400,7 @@ function toTeam(name: string, group = ""): Team {
 
   return {
     id: slug(name),
-    name: spanishNameByTeam[name] ?? name,
+    name: displayName ?? name,
     flag: flagByTeam[name] ?? (isPlaceholder(name) ? "🏆" : "🏳️"),
     flagCode,
     flagUrl: flagUrlForTeam(name),
@@ -498,7 +513,9 @@ function sameTeamName(promiedosName: string | undefined, fixtureName: string) {
 function scorersFromPromiedosTeam(team?: PromiedosTeam) {
   return (team?.goals ?? []).map((goal) => {
     const player = goal.player_name ?? goal.player_sname ?? "Gol";
-    return goal.time_to_display ? `${player} ${goal.time_to_display}` : player;
+    const minute = goal.time_to_display ? ` ${goal.time_to_display}` : "";
+    const type = goal.goal_type ? ` (${goal.goal_type})` : "";
+    return `${player}${minute}${type}`;
   });
 }
 
