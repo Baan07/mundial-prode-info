@@ -11,9 +11,9 @@ const statusLabel = {
 };
 
 const rowStyle = {
-  scheduled: "border-emerald-100/20 bg-[#062f1d]/92 hover:bg-[#0a3a24]",
-  live: "border-l-4 border-lime-400 border-t-lime-300/45 bg-[#12451f]/95 shadow-[inset_0_0_0_1px_rgba(163,230,53,0.22)] hover:bg-[#175526]",
-  finished: "border-t-slate-300/18 bg-[#183044]/92 opacity-90 hover:bg-[#203a51]",
+  scheduled: "border-white/10 bg-[#061f16]/88 hover:bg-[#0b3021]",
+  live: "border-l-4 border-lime-300 border-t-lime-300/45 bg-[#174d27]/95 shadow-[inset_0_0_0_1px_rgba(183,255,33,0.24)] hover:bg-[#1b5a2e]",
+  finished: "border-t-cyan-100/15 bg-[#102b35]/92 opacity-95 hover:bg-[#163846]",
 };
 
 const badgeStyle = {
@@ -46,11 +46,11 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
 
   return (
     <Link className="block" href={`/partido/${match.id}`}>
-      <article className={`grid grid-cols-[58px_minmax(0,1fr)] border-t transition sm:grid-cols-[72px_minmax(0,1fr)] md:grid-cols-[92px_minmax(0,1fr)_210px] ${rowStyle[match.status]}`}>
+      <article className={`grid grid-cols-[62px_minmax(0,1fr)] border-t transition sm:grid-cols-[76px_minmax(0,1fr)] md:grid-cols-[96px_minmax(0,1fr)_220px] ${rowStyle[match.status]}`}>
         <div className={`grid place-items-center border-r px-1.5 py-3 text-center sm:px-2 ${timeBorderStyle[match.status]}`}>
           <span className="text-[11px] font-black text-white sm:text-xs">{timeOnly(match.kickoffAt)}</span>
           {match.status !== "scheduled" ? (
-            <span className={`mt-1 rounded px-1.5 py-0.5 text-[10px] font-black ${badgeStyle[match.status]}`}>
+            <span className={`mt-1 rounded-full px-2 py-0.5 text-[10px] font-black ${badgeStyle[match.status]}`}>
               {match.status === "live" && match.liveMinute ? `${match.liveMinute}'` : statusLabel[match.status]}
             </span>
           ) : null}
@@ -61,7 +61,7 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
             <span className="min-w-0 truncate text-[13px] font-black leading-tight text-white sm:text-sm md:text-base">{home.name}</span>
             <FlagBadge size="sm" team={home} />
           </div>
-          <div className="text-center text-base font-black text-white sm:text-lg">
+          <div className="rounded-md bg-black/30 px-1 py-1 text-center text-base font-black text-white ring-1 ring-white/10 sm:text-lg">
             {hasScore ? `${match.homeScore}-${match.awayScore}` : "-"}
           </div>
           <div className="flex min-w-0 items-center gap-2">

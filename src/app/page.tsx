@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { CalendarDays, Radio, RefreshCw, Trophy } from "lucide-react";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { MatchCard } from "@/components/MatchCard";
 import { getWorldCupData } from "@/lib/realData";
@@ -103,30 +103,38 @@ export default async function Home() {
   const liveCount = matches.filter((match) => match.status === "live").length;
 
   return (
-    <main className="relative mx-auto max-w-6xl px-2 py-3 sm:px-4 sm:py-6 md:py-10">
+    <main className="relative mx-auto max-w-6xl px-2 py-3 sm:px-4 sm:py-6 md:py-8">
       <AutoRefresh seconds={30} />
-      <section className="overflow-hidden rounded-lg border border-emerald-100/15 bg-[#062f1d]/95 shadow-2xl shadow-black/30">
-        <div className="grid grid-cols-[30px_1fr_30px] items-center border-b border-emerald-100/15 px-2 py-3 sm:grid-cols-[44px_1fr_44px] sm:px-3 sm:py-4">
-          <ChevronLeft className="text-white" size={20} />
-          <h1 className="text-center text-sm font-black uppercase leading-tight text-white sm:text-lg">
-            Hoy y proximos 2 dias <span className="text-lime-400">▼</span>
-          </h1>
-          <ChevronRight className="justify-self-end text-white" size={20} />
+      <section className="sports-panel overflow-hidden rounded-2xl">
+        <div className="scoreboard-topline flex items-center justify-between gap-3 px-3 py-2 sm:px-4">
+          <span className="inline-flex items-center gap-2 text-xs font-black uppercase sm:text-sm">
+            <Trophy size={16} /> Mundial 2026
+          </span>
+          <span className="inline-flex items-center gap-2 text-xs font-black uppercase">
+            <Radio size={15} /> {isLiveConnected ? "Datos en vivo" : "Fixture oficial"}
+          </span>
+        </div>
+
+        <div className="border-b border-emerald-100/15 px-3 py-4 sm:px-5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-lime-300">Agenda Argentina</p>
+              <h1 className="font-display text-4xl leading-none text-white sm:text-5xl">Partidos</h1>
+            </div>
+            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-2 text-xs font-black uppercase text-emerald-100/75">
+              <CalendarDays size={15} /> Hoy + proximos 2 dias
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center justify-between gap-2 border-b border-emerald-100/15 px-3 py-2.5 sm:px-4 sm:py-3">
-          <div className="flex gap-4 text-xs font-black uppercase sm:gap-5 sm:text-sm">
-            <span className="text-lime-400">Todos</span>
-            <span className="text-white">Vivo ({liveCount})</span>
+          <div className="flex gap-2 text-xs font-black uppercase sm:text-sm">
+            <span className="rounded-full bg-lime-300 px-3 py-1 text-green-950">Todos</span>
+            <span className="rounded-full border border-white/10 px-3 py-1 text-white">Vivo ({liveCount})</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden rounded-md bg-[#007c19] px-3 py-2 text-xs font-black text-white sm:inline-flex">
-              TV Argentina
-            </span>
-            <span className="grid size-9 place-items-center rounded-md bg-[#008f12] text-white sm:size-10">
-              <Bell size={17} />
-            </span>
-          </div>
+          <span className="hidden rounded-full bg-white/[0.08] px-3 py-2 text-xs font-black text-white sm:inline-flex">
+            TV Argentina
+          </span>
         </div>
 
         <div className="px-3 py-2.5 sm:px-4 sm:py-3">
@@ -138,8 +146,8 @@ export default async function Home() {
         <div className="px-0 pb-4">
           {matchGroups.map((group) => (
             <section key={group.date}>
-              <div className="border-y border-emerald-100/20 bg-[#052617] px-3 py-2 text-xs font-black uppercase text-white sm:px-4 sm:text-sm">
-                Mundial · {group.title} · {new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short" }).format(new Date(`${group.date}T12:00:00Z`))}
+              <div className="border-y border-emerald-100/20 bg-black/25 px-3 py-2 text-xs font-black uppercase text-white sm:px-4 sm:text-sm">
+                Mundial - {group.title} - {new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short" }).format(new Date(`${group.date}T12:00:00Z`))}
               </div>
               {group.matches.length ? (
                 group.matches.map((match) => <MatchCard match={match} teams={teams} key={match.id} />)
@@ -153,12 +161,12 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mt-4 flex flex-col gap-3 rounded-lg border border-emerald-100/15 bg-[#062f1d]/85 p-3 sm:mt-6 sm:p-4 md:flex-row md:items-center md:justify-between">
+      <section className="sports-panel mt-4 flex flex-col gap-3 rounded-2xl p-3 sm:mt-6 sm:p-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <p className="text-sm font-bold text-white">Fuente: {source}</p>
           <p className="mt-1 text-sm text-emerald-100/65">Horarios en Argentina, formato 24 hs. Canales sujetos a grilla oficial.</p>
         </div>
-        <Link className="rounded-md bg-lime-500 px-4 py-2 text-center text-sm font-black text-green-950" href="/fixture">
+        <Link className="rounded-full bg-lime-300 px-4 py-2 text-center text-sm font-black uppercase text-green-950" href="/fixture">
           Fixture completo
         </Link>
       </section>

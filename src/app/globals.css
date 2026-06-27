@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #07111f;
+  --background: #06150f;
   --foreground: #f8fbff;
+  --panel: rgba(5, 31, 21, 0.94);
+  --panel-soft: rgba(8, 48, 31, 0.86);
+  --line: rgba(210, 255, 232, 0.16);
+  --accent: #b7ff21;
+  --accent-2: #15d46f;
+  --ink: #f7fff9;
+  --muted: rgba(223, 255, 238, 0.68);
 }
 
 @theme inline {
@@ -19,10 +26,11 @@
 body {
   margin: 0;
   background:
-    linear-gradient(rgba(3, 45, 25, 0.88), rgba(3, 45, 25, 0.9)),
-    radial-gradient(circle at 50% 20%, rgba(113, 211, 71, 0.18), transparent 28rem),
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 96px),
-    linear-gradient(135deg, #053d24 0%, #082f1f 48%, #041b13 100%);
+    radial-gradient(circle at 50% -10%, rgba(183, 255, 33, 0.22), transparent 24rem),
+    radial-gradient(circle at 88% 12%, rgba(21, 212, 111, 0.18), transparent 19rem),
+    linear-gradient(rgba(3, 24, 16, 0.9), rgba(3, 24, 16, 0.94)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 92px),
+    linear-gradient(135deg, #073b23 0%, #062719 45%, #03130d 100%);
   color: var(--foreground);
   font-family: var(--font-nunito), Arial, Helvetica, sans-serif;
   font-size-adjust: 0.52;
@@ -38,9 +46,10 @@ body::before {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, transparent calc(50% - 1px), rgba(255,255,255,0.08) calc(50% - 1px), rgba(255,255,255,0.08) calc(50% + 1px), transparent calc(50% + 1px)),
-    radial-gradient(circle at 50% 50%, transparent 0 92px, rgba(255,255,255,0.06) 93px 95px, transparent 96px);
-  opacity: 0.45;
+    linear-gradient(90deg, transparent calc(50% - 1px), rgba(255,255,255,0.11) calc(50% - 1px), rgba(255,255,255,0.11) calc(50% + 1px), transparent calc(50% + 1px)),
+    radial-gradient(circle at 50% 46%, transparent 0 92px, rgba(255,255,255,0.08) 93px 95px, transparent 96px),
+    linear-gradient(0deg, transparent 49%, rgba(255,255,255,0.045) 49.2%, rgba(255,255,255,0.045) 50.8%, transparent 51%);
+  opacity: 0.5;
 }
 
 a {
@@ -51,4 +60,23 @@ input,
 select,
 button {
   font: inherit;
+}
+
+.sports-panel {
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(12, 69, 43, 0.92), rgba(3, 31, 20, 0.96)),
+    var(--panel);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.38);
+}
+
+.scoreboard-topline {
+  background: linear-gradient(90deg, #b7ff21, #27e178 55%, #00b7ff);
+  color: #03130d;
+}
+
+.sport-select {
+  border: 1px solid rgba(223, 255, 238, 0.18);
+  background: rgba(1, 18, 12, 0.72);
+  color: white;
 }

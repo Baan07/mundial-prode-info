@@ -52,7 +52,7 @@ export function FixtureExplorer({ groups, matches, teams }: { groups: string[]; 
     <>
       <div className="grid gap-2 border-b border-emerald-100/15 p-3 sm:grid-cols-3 sm:p-4">
         <select
-          className="min-w-0 rounded-md border border-emerald-100/15 bg-[#052617] p-2.5 text-sm text-white sm:p-3"
+          className="sport-select min-w-0 rounded-full p-2.5 text-sm font-bold sm:p-3"
           onChange={(event) => setSelectedGroup(event.target.value)}
           value={selectedGroup}
         >
@@ -62,7 +62,7 @@ export function FixtureExplorer({ groups, matches, teams }: { groups: string[]; 
           ))}
         </select>
         <select
-          className="min-w-0 rounded-md border border-emerald-100/15 bg-[#052617] p-2.5 text-sm text-white sm:p-3"
+          className="sport-select min-w-0 rounded-full p-2.5 text-sm font-bold sm:p-3"
           onChange={(event) => setSelectedTeam(event.target.value)}
           value={selectedTeam}
         >
@@ -72,7 +72,7 @@ export function FixtureExplorer({ groups, matches, teams }: { groups: string[]; 
           ))}
         </select>
         <select
-          className="min-w-0 rounded-md border border-emerald-100/15 bg-[#052617] p-2.5 text-sm text-white sm:p-3"
+          className="sport-select min-w-0 rounded-full p-2.5 text-sm font-bold sm:p-3"
           onChange={(event) => setSelectedStatus(event.target.value as "" | MatchStatus)}
           value={selectedStatus}
         >
@@ -82,11 +82,11 @@ export function FixtureExplorer({ groups, matches, teams }: { groups: string[]; 
         </select>
       </div>
 
-      <div className="border-b border-emerald-100/15 bg-[#041f13] px-3 py-3 sm:px-4 sm:py-4">
+      <div className="border-b border-emerald-100/15 bg-black/20 px-3 py-3 sm:px-4 sm:py-4">
         <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
           <div className="text-xs font-black uppercase text-lime-400 sm:text-sm">Tabla de posiciones por zona</div>
           <div className="text-xs font-bold text-emerald-100/60">
-            {filteredMatches.length} partidos {selectedStatus ? `· ${statusLabel[selectedStatus]}` : ""}
+            {filteredMatches.length} partidos {selectedStatus ? `- ${statusLabel[selectedStatus]}` : ""}
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -97,7 +97,7 @@ export function FixtureExplorer({ groups, matches, teams }: { groups: string[]; 
       </div>
 
       <div>
-        <div className="border-y border-emerald-100/20 bg-[#052617] px-3 py-2 text-xs font-black uppercase text-white sm:px-4 sm:text-sm">
+        <div className="border-y border-emerald-100/20 bg-black/25 px-3 py-2 text-xs font-black uppercase text-white sm:px-4 sm:text-sm">
           Fase de grupos
         </div>
         {groupMatches.length ? (
@@ -110,7 +110,7 @@ export function FixtureExplorer({ groups, matches, teams }: { groups: string[]; 
       </div>
 
       <div>
-        <div className="border-y border-emerald-100/20 bg-[#052617] px-3 py-2 text-xs font-black uppercase text-white sm:px-4 sm:text-sm">
+        <div className="border-y border-emerald-100/20 bg-black/25 px-3 py-2 text-xs font-black uppercase text-white sm:px-4 sm:text-sm">
           Eliminacion directa
         </div>
         {knockoutMatches.length ? (
