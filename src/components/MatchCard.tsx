@@ -31,9 +31,26 @@ function matchMetrics(match: Match, home: Team, away: Team) {
 
 function events(match: Match) {
   return [
-    ...(match.homeScorers ?? []).map((value) => ({ side: "L", value })),
-    ...(match.awayScorers ?? []).map((value) => ({ side: "V", value })),
+    ...(match.homeScorers ?? []).map((value) => ({ side: "Local", value })),
+    ...(match.awayScorers ?? []).map((value) => ({ side: "Visitante", value })),
   ].slice(0, 5);
+}
+
+function ScorerList({ scorers, side }: { scorers?: string[]; side: "local" | "visitante" }) {
+  if (!scorers?.length) {
+    return <p className="match-scorer-empty">Sin goles cargados</p>;
+  }
+
+  return (
+    <div className="match-scorers">
+      {scorers.slice(0, 4).map((scorer) => (
+        <span className="match-scorer" key={`${side}-${scorer}`}>
+          <span className="match-scorer-dot" />
+          {scorer}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compact?: boolean }) {
@@ -62,11 +79,7 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
           <div className="match-team">
             <FlagBadge size="xl" team={home} />
             <h3 className="match-team-name">{home.name}</h3>
-            {(match.homeScorers ?? []).length ? (
-              <div className="grid gap-1 text-xs font-bold text-white/72">
-                {match.homeScorers?.slice(0, 3).map((scorer) => <span className="truncate" key={scorer}>Gol: {scorer}</span>)}
-              </div>
-            ) : null}
+            <ScorerList scorers={match.homeScorers} side="local" />
           </div>
 
           <div className="match-scorebox animate-score-pop">
@@ -77,11 +90,7 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
           <div className="match-team away">
             <FlagBadge size="xl" team={away} />
             <h3 className="match-team-name">{away.name}</h3>
-            {(match.awayScorers ?? []).length ? (
-              <div className="grid gap-1 text-xs font-bold text-white/72">
-                {match.awayScorers?.slice(0, 3).map((scorer) => <span className="truncate" key={scorer}>Gol: {scorer}</span>)}
-              </div>
-            ) : null}
+            <ScorerList scorers={match.awayScorers} side="visitante" />
           </div>
         </div>
 
@@ -116,7 +125,7 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
             </div>
             <div className="flex flex-wrap gap-2 text-xs font-bold text-white/58">
               {matchEvents.length ? matchEvents.map((event) => (
-                <span className="bg-white/[0.08] px-2 py-1" key={`${event.side}-${event.value}`}>{event.side} - {event.value}</span>
+                <span className="bg-white/[0.08] px-2 py-1" key={`${event.side}-${event.value}`}>{event.side}: {event.value}</span>
               )) : <span>Timeline listo para eventos en vivo: goles, tarjetas y cambios.</span>}
             </div>
           </div>

@@ -360,6 +360,41 @@ button {
   text-align: right;
 }
 
+.match-scorers {
+  display: grid;
+  max-width: 100%;
+  gap: 5px;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.match-scorer {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.match-team.away .match-scorer {
+  flex-direction: row-reverse;
+}
+
+.match-scorer-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  background: var(--gold);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.match-scorer-empty {
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
 .match-team-name {
   overflow: hidden;
   font-size: clamp(22px, 4vw, 48px);
@@ -517,19 +552,47 @@ button {
   }
 
   .match-mainline {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
   }
 
-  .match-team.away {
+  .match-scorebox {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    justify-self: center;
+    width: 116px;
+  }
+
+  .match-team {
+    grid-row: 2;
+    min-width: 0;
     justify-items: start;
     text-align: left;
   }
 
-  .match-scorebox {
-    width: 104px;
+  .match-team.away {
+    justify-items: end;
+    text-align: right;
   }
 
   .match-team-name {
-    white-space: normal;
+    max-width: 100%;
+    font-size: clamp(25px, 9vw, 40px);
+    line-height: 0.9;
+  }
+
+  .match-scorers {
+    width: 100%;
+    font-size: 11px;
+    line-height: 1.18;
+  }
+
+  .match-scorer {
+    overflow-wrap: anywhere;
+  }
+
+  .match-team.away .match-scorer {
+    justify-content: flex-start;
+    text-align: right;
   }
 }
