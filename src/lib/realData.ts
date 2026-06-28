@@ -801,6 +801,17 @@ function resultLetter(goalsFor: number, goalsAgainst: number) {
   return "E";
 }
 
+function goalDifference(team: Team) {
+  return team.goalsFor - team.goalsAgainst;
+}
+
+function compareGroupTeams(a: Team, b: Team) {
+  if (b.points !== a.points) return b.points - a.points;
+  if (goalDifference(b) !== goalDifference(a)) return goalDifference(b) - goalDifference(a);
+  if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+  return a.name.localeCompare(b.name, "es");
+}
+
 function applyGroupStandings(teams: Team[], matches: Match[]) {
   const table = new Map<string, Team>(
     teams.map((team) => [
@@ -851,6 +862,54 @@ function applyGroupStandings(teams: Team[], matches: Match[]) {
   }));
 }
 
+function buildGroupRankings(teams: Team[]) {
+  const byGroup = new Map<string, Team[]>();
+  for (const team of teams) {
+    if (!team.group || team.played < 3) continue;
+    byGroup.set(team.group, [...(byGroup.get(team.group) ?? []), team]);
+  }
+  for (const [group, groupTeams] of byGroup) {
+    byGroup.set(group, groupTeams.sort(compareGroupTeams));
+  }
+  return byGroup;
+}
+
+function sourceTeamName(team: Team | undefined, sourceNameById: Map<string, string>) {
+  return team ? sourceNameById.get(team.id) ?? team.name : undefined;
+}
+
+function resolveThirdPlace(groups: string[], rankings: Map<string, Team[]>, sourceNameById: Map<string, string>) {
+  const candidates = groups
+    .map((group) => rankings.get(group)?.[2])
+    .filter((team): team is Team => Boolean(team))
+    .sort(compareGroupTeams);
+  return sourceTeamName(candidates[0], sourceNameById);
+}
+
+function resolveBracketTeamName(name: string, rankings: Map<string, Team[]>, sourceNameById: Map<string, string>) {
+  const winner = name.match(/^Group ([A-Z]) winners$/i);
+  if (winner) return sourceTeamName(rankings.get(winner[1])?.[0], sourceNameById) ?? name;
+
+  const runnerUp = name.match(/^Group ([A-Z]) runners-up$/i);
+  if (runnerUp) return sourceTeamName(rankings.get(runnerUp[1])?.[1], sourceNameById) ?? name;
+
+  const thirdPlace = name.match(/^Group ([A-Z/]+) third place$/i);
+  if (thirdPlace) return resolveThirdPlace(thirdPlace[1].split("/"), rankings, sourceNameById) ?? name;
+
+  return name;
+}
+
+function resolveKnockoutFixtures(fixtures: StatsApiFixture[], rankings: Map<string, Team[]>, sourceNameById: Map<string, string>) {
+  return fixtures.map((fixture) => {
+    if (fixture.stage === "group-stage") return fixture;
+    return {
+      ...fixture,
+      homeTeam: resolveBracketTeamName(fixture.homeTeam, rankings, sourceNameById),
+      awayTeam: resolveBracketTeamName(fixture.awayTeam, rankings, sourceNameById),
+    };
+  });
+}
+
 export async function getWorldCupData() {
   try {
     const fixtures = await fetchFixtures();
@@ -868,15 +927,28 @@ export async function getWorldCupData() {
         groups.set(fixture.awayTeam, fixture.group);
       }
     }
+    const sourceNameById = new Map<string, string>();
     const teamMap = new Map<string, Team>();
     for (const fixture of fixtures) {
       for (const teamName of [fixture.homeTeam, fixture.awayTeam]) {
         const id = slug(teamName);
+        if (!isPlaceholder(teamName)) sourceNameById.set(id, teamName);
         if (!teamMap.has(id)) teamMap.set(id, toTeam(teamName, groups.get(teamName) ?? ""));
       }
     }
-    const matches = fixtures.map((fixture) => toMatch(fixture, overlays.get(String(fixture.matchNumber))));
-    const teams = applyGroupStandings(Array.from(teamMap.values()), matches);
+    const initialMatches = fixtures.map((fixture) => toMatch(fixture, overlays.get(String(fixture.matchNumber))));
+    const initialTeams = applyGroupStandings(Array.from(teamMap.values()), initialMatches);
+    const rankings = buildGroupRankings(initialTeams);
+    const resolvedFixtures = resolveKnockoutFixtures(fixtures, rankings, sourceNameById);
+    const resolvedTeamMap = new Map<string, Team>();
+    for (const fixture of resolvedFixtures) {
+      for (const teamName of [fixture.homeTeam, fixture.awayTeam]) {
+        const id = slug(teamName);
+        if (!resolvedTeamMap.has(id)) resolvedTeamMap.set(id, toTeam(teamName, groups.get(teamName) ?? ""));
+      }
+    }
+    const matches = resolvedFixtures.map((fixture) => toMatch(fixture, overlays.get(String(fixture.matchNumber))));
+    const teams = applyGroupStandings(Array.from(resolvedTeamMap.values()), matches);
     return {
       teams,
       matches,

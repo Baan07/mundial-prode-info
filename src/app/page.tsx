@@ -1,11 +1,7 @@
-import Link from "next/link";
-import { CalendarDays, ChevronRight, Clock3, RadioTower, Tv } from "lucide-react";
 import { AutoRefresh } from "@/components/AutoRefresh";
-import { FlagBadge } from "@/components/FlagBadge";
 import { MatchCard } from "@/components/MatchCard";
-import { channelLabel } from "@/lib/broadcast";
-import { formatArgentinaTime, getTeamFromList, getWorldCupData } from "@/lib/realData";
-import { Match, Team } from "@/lib/types";
+import { getWorldCupData } from "@/lib/realData";
+import { Match } from "@/lib/types";
 
 export const revalidate = 30;
 
@@ -120,112 +116,18 @@ function upcomingKnockoutMatches(matches: Match[], limit = 3) {
     .slice(0, limit);
 }
 
-function featuredMatch(matches: Match[]) {
-  return matches.find((match) => match.status === "live")
-    ?? matches.find((match) => match.status !== "finished")
-    ?? matches[0];
-}
-
-function winProbabilities(home: Team, away: Team) {
-  const total = Math.max(1, home.strengthRating + away.strengthRating);
-  const draw = 24;
-  const available = 100 - draw;
-  const homeWin = Math.round((home.strengthRating / total) * available);
-  const awayWin = 100 - draw - homeWin;
-  return { homeWin, draw, awayWin };
-}
-
-function scoreLabel(match: Match) {
-  if (match.homeScore !== undefined && match.awayScore !== undefined) return `${match.homeScore}-${match.awayScore}`;
-  return "VS";
-}
-
-function Hero({ match, teams, source, isLiveConnected }: { match: Match; teams: Team[]; source: string; isLiveConnected: boolean }) {
-  const home = getTeamFromList(teams, match.homeTeamId);
-  const away = getTeamFromList(teams, match.awayTeamId);
-  if (!home || !away) return null;
-  const probs = winProbabilities(home, away);
-
-  return (
-    <section className="stadium-hero">
-      <div className="broadcast-shell">
-        <div className="hero-scoreboard">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <span className={`status-chip ${match.status === "live" ? "live" : ""}`}>
-              {match.status === "live" ? <RadioTower size={15} /> : <CalendarDays size={15} />}
-              {match.status === "live" ? "Transmision en vivo" : "Partido destacado"}
-            </span>
-            <span className="text-xs font-black uppercase tracking-[0.18em] text-white/58">
-              Fuente: {source} - {isLiveConnected ? "actualiza cada 30s" : "fixture conectado"}
-            </span>
-          </div>
-
-          <div>
-            <p className="section-kicker">Centro de cobertura Mundial 2026</p>
-            <h1 className="section-title max-w-4xl">La previa, el vivo y los numeros en una sola pantalla</h1>
-          </div>
-
-          <Link className="hero-match-grid" href={`/partido/${match.id}`}>
-            <div className="hero-team">
-              <FlagBadge size="xl" team={home} />
-              <h2 className="hero-team-name font-display">{home.name}</h2>
-              <span className="text-sm font-bold text-white/62">{home.group ? `Grupo ${home.group}` : match.phase}</span>
-            </div>
-
-            <div className="hero-score animate-score-pop">
-              <span>{scoreLabel(match)}</span>
-            </div>
-
-            <div className="hero-team">
-              <FlagBadge size="xl" team={away} />
-              <h2 className="hero-team-name font-display">{away.name}</h2>
-              <span className="text-sm font-bold text-white/62">{away.group ? `Grupo ${away.group}` : match.phase}</span>
-            </div>
-          </Link>
-
-          <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr_1fr] lg:items-end">
-            <div className="grid gap-2 text-sm font-bold text-white/68">
-              <span className="flex items-center gap-2"><Clock3 size={17} className="text-[#d9a441]" /> {formatArgentinaTime(match.kickoffAt)} ARG</span>
-              <span className="flex items-center gap-2"><Tv size={17} className="text-[#d9a441]" /> {channelLabel(match)}</span>
-            </div>
-
-            <div className="probability-rail">
-              <div className="flex justify-between text-xs font-black uppercase tracking-[0.14em] text-white/62">
-                <span>{home.name} {probs.homeWin}%</span>
-                <span>Empate {probs.draw}%</span>
-                <span>{away.name} {probs.awayWin}%</span>
-              </div>
-              <div className="probability-track">
-                <span className="bg-[#1db46a]" style={{ width: `${probs.homeWin}%` }} />
-                <span className="bg-[#f4f1e8]" style={{ width: `${probs.draw}%` }} />
-                <span className="bg-[#d9a441]" style={{ width: `${probs.awayWin}%` }} />
-              </div>
-            </div>
-
-            <Link className="broadcast-button justify-self-start px-5 py-3 text-sm font-black uppercase lg:justify-self-end" href={`/partido/${match.id}`}>
-              Abrir partido <ChevronRight className="inline" size={17} />
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default async function Home() {
-  const { matches, teams, source, isLiveConnected } = await getWorldCupData();
+  const { matches, teams } = await getWorldCupData();
   const visibleMatches = upcomingKnockoutMatches(matches, 3);
   const matchGroups = visibleMatchGroups(visibleMatches);
-  const featured = featuredMatch(visibleMatches);
   const liveCount = visibleMatches.filter((match) => match.status === "live").length;
   const scheduledCount = visibleMatches.filter((match) => match.status === "scheduled").length;
 
   return (
     <main>
       <AutoRefresh seconds={30} />
-      {featured ? <Hero match={featured} teams={teams} source={source} isLiveConnected={isLiveConnected} /> : null}
 
-      <section className="content-stage">
+      <section className="content-stage pt-24">
         <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
           <div>
             <p className="section-kicker">Desde 16avos</p>
