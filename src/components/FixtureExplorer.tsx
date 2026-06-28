@@ -50,9 +50,9 @@ export function FixtureExplorer({ groups, matches, teams }: { groups: string[]; 
 
   return (
     <>
-      <div className="grid gap-2 border-b border-emerald-100/15 p-3 sm:grid-cols-3 sm:p-4">
+      <div className="mb-7 grid gap-3 sm:grid-cols-3">
         <select
-          className="sport-select min-w-0 rounded-full p-2.5 text-sm font-bold sm:p-3"
+          className="sport-select min-w-0 p-3 text-sm font-black uppercase tracking-wide"
           onChange={(event) => setSelectedGroup(event.target.value)}
           value={selectedGroup}
         >
@@ -62,7 +62,7 @@ export function FixtureExplorer({ groups, matches, teams }: { groups: string[]; 
           ))}
         </select>
         <select
-          className="sport-select min-w-0 rounded-full p-2.5 text-sm font-bold sm:p-3"
+          className="sport-select min-w-0 p-3 text-sm font-black uppercase tracking-wide"
           onChange={(event) => setSelectedTeam(event.target.value)}
           value={selectedTeam}
         >
@@ -72,7 +72,7 @@ export function FixtureExplorer({ groups, matches, teams }: { groups: string[]; 
           ))}
         </select>
         <select
-          className="sport-select min-w-0 rounded-full p-2.5 text-sm font-bold sm:p-3"
+          className="sport-select min-w-0 p-3 text-sm font-black uppercase tracking-wide"
           onChange={(event) => setSelectedStatus(event.target.value as "" | MatchStatus)}
           value={selectedStatus}
         >
@@ -82,14 +82,17 @@ export function FixtureExplorer({ groups, matches, teams }: { groups: string[]; 
         </select>
       </div>
 
-      <div className="border-b border-emerald-100/15 bg-black/20 px-3 py-3 sm:px-4 sm:py-4">
-        <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-          <div className="text-xs font-black uppercase text-lime-400 sm:text-sm">Tabla de posiciones por zona</div>
-          <div className="text-xs font-bold text-emerald-100/60">
+      <div className="mb-9">
+        <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="section-kicker">Grupos</p>
+            <h2 className="font-display text-5xl leading-none">Tabla de posiciones</h2>
+          </div>
+          <div className="text-xs font-black uppercase tracking-[0.12em] text-white/48">
             {filteredMatches.length} partidos {selectedStatus ? `- ${statusLabel[selectedStatus]}` : ""}
           </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visibleGroups.map((group) => (
             <StandingsTable group={group} key={group} teams={teams.filter((team) => team.group === group)} />
           ))}
@@ -97,26 +100,22 @@ export function FixtureExplorer({ groups, matches, teams }: { groups: string[]; 
       </div>
 
       <div>
-        <div className="border-y border-emerald-100/20 bg-black/25 px-3 py-2 text-xs font-black uppercase text-white sm:px-4 sm:text-sm">
-          Fase de grupos
-        </div>
+        <h2 className="mb-3 font-display text-5xl leading-none">Fase de grupos</h2>
         {groupMatches.length ? (
-          groupMatches.map((match) => <MatchCard match={match} teams={teams} key={match.id} />)
+          <div className="grid gap-4">{groupMatches.map((match) => <MatchCard match={match} teams={teams} key={match.id} />)}</div>
         ) : (
-          <div className="border-t border-emerald-100/20 px-4 py-5 text-sm font-bold text-emerald-100/65">
+          <div className="match-broadcast text-sm font-bold text-white/62">
             No hay partidos de fase de grupos con esos filtros.
           </div>
         )}
       </div>
 
-      <div>
-        <div className="border-y border-emerald-100/20 bg-black/25 px-3 py-2 text-xs font-black uppercase text-white sm:px-4 sm:text-sm">
-          Eliminacion directa
-        </div>
+      <div className="mt-9">
+        <h2 className="mb-3 font-display text-5xl leading-none">Eliminacion directa</h2>
         {knockoutMatches.length ? (
-          knockoutMatches.map((match) => <MatchCard match={match} teams={teams} key={match.id} />)
+          <div className="grid gap-4">{knockoutMatches.map((match) => <MatchCard match={match} teams={teams} key={match.id} />)}</div>
         ) : (
-          <div className="border-t border-emerald-100/20 px-4 py-5 text-sm font-bold text-emerald-100/65">
+          <div className="match-broadcast text-sm font-bold text-white/62">
             No hay partidos de eliminacion directa con esos filtros.
           </div>
         )}

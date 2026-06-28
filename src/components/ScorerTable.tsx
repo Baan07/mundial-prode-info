@@ -47,44 +47,53 @@ export function ScorerTable({ matches, teams }: { matches: Match[]; teams: Team[
   const rows = Array.from(rowsByPlayer.values())
     .sort((a, b) => b.goals - a.goals || a.player.localeCompare(b.player, "es"))
     .slice(0, 30);
+  const leader = rows[0];
+  const rest = rows.slice(1);
+
+  if (!leader) {
+    return (
+      <div className="match-broadcast">
+        <p className="text-sm font-bold text-white/62">Todavia no hay goles cargados.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#151a18]">
-      <table className="w-full min-w-[620px] text-left text-sm">
-        <thead className="bg-[#f2efe4] text-xs uppercase text-[#101312]/70">
-          <tr>
-            <th className="p-3">#</th>
-            <th>Jugador</th>
-            <th>Seleccion</th>
-            <th className="text-center">Goles</th>
-            <th>Minutos</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-white/10">
-          {rows.length ? (
-            rows.map((row, index) => (
-              <tr className="text-stone-100" key={`${row.team.id}-${row.player}`}>
-                <td className="p-3 font-black text-[#d8ff3f]">{index + 1}</td>
-                <td className="font-black text-white">{row.player}</td>
-                <td>
-                  <span className="flex min-w-0 items-center gap-2">
-                    <FlagBadge size="xs" team={row.team} />
-                    <span className="truncate">{row.team.name}</span>
-                  </span>
-                </td>
-                <td className="text-center text-base font-black text-[#d8ff3f]">{row.goals}</td>
-                <td className="text-stone-300/70">{row.minutes.join(", ") || "-"}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td className="p-4 text-center font-bold text-stone-300/70" colSpan={5}>
-                Todavia no hay goles cargados.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+      <section className="match-broadcast">
+        <p className="section-kicker">Maximo goleador</p>
+        <div className="flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <FlagBadge size="xl" team={leader.team} />
+            <h2 className="mt-4 font-display text-7xl leading-none">{leader.player}</h2>
+            <p className="mt-2 text-sm font-bold text-white/58">{leader.team.name}</p>
+          </div>
+          <div className="match-scorebox">
+            <strong>{leader.goals}</strong>
+            <span className="block text-xs font-black uppercase">goles</span>
+          </div>
+        </div>
+        <p className="mt-4 text-sm font-bold text-white/58">Minutos: {leader.minutes.join(", ") || "-"}</p>
+      </section>
+
+      <section className="grid gap-2">
+        {rest.map((row, index) => (
+          <article className="grid grid-cols-[42px_minmax(0,1fr)_64px] items-center gap-3 bg-white/[0.055] p-3 transition hover:bg-white/[0.1]" key={`${row.team.id}-${row.player}`}>
+            <span className="font-display text-3xl leading-none text-[#d9a441]">{index + 2}</span>
+            <div className="min-w-0">
+              <div className="flex min-w-0 items-center gap-2">
+                <FlagBadge size="xs" team={row.team} />
+                <h3 className="truncate text-lg font-black">{row.player}</h3>
+              </div>
+              <p className="truncate text-xs font-bold text-white/50">{row.team.name} - {row.minutes.join(", ") || "sin minuto"}</p>
+            </div>
+            <div className="text-right">
+              <strong className="font-display text-4xl leading-none">{row.goals}</strong>
+              <p className="text-[10px] font-black uppercase text-white/44">goles</p>
+            </div>
+          </article>
+        ))}
+      </section>
     </div>
   );
 }

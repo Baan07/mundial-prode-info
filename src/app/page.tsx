@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { CalendarDays, Radio, RefreshCw, Trophy } from "lucide-react";
+import { CalendarDays, ChevronRight, Clock3, RadioTower, Tv } from "lucide-react";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { FlagBadge } from "@/components/FlagBadge";
 import { MatchCard } from "@/components/MatchCard";
-import { getWorldCupData } from "@/lib/realData";
-import { Match } from "@/lib/types";
+import { channelLabel } from "@/lib/broadcast";
+import { formatArgentinaTime, getTeamFromList, getWorldCupData } from "@/lib/realData";
+import { Match, Team } from "@/lib/types";
 
 export const revalidate = 30;
 
@@ -97,78 +99,147 @@ function visibleMatchGroups(matches: Match[]) {
   }));
 }
 
+function featuredMatch(matches: Match[]) {
+  return matches.find((match) => match.status === "live")
+    ?? matches.find((match) => match.status !== "finished")
+    ?? matches[0];
+}
+
+function winProbabilities(home: Team, away: Team) {
+  const total = Math.max(1, home.strengthRating + away.strengthRating);
+  const draw = 24;
+  const available = 100 - draw;
+  const homeWin = Math.round((home.strengthRating / total) * available);
+  const awayWin = 100 - draw - homeWin;
+  return { homeWin, draw, awayWin };
+}
+
+function scoreLabel(match: Match) {
+  if (match.homeScore !== undefined && match.awayScore !== undefined) return `${match.homeScore}-${match.awayScore}`;
+  return "VS";
+}
+
+function Hero({ match, teams, source, isLiveConnected }: { match: Match; teams: Team[]; source: string; isLiveConnected: boolean }) {
+  const home = getTeamFromList(teams, match.homeTeamId);
+  const away = getTeamFromList(teams, match.awayTeamId);
+  if (!home || !away) return null;
+  const probs = winProbabilities(home, away);
+
+  return (
+    <section className="stadium-hero">
+      <div className="broadcast-shell">
+        <div className="hero-scoreboard">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className={`status-chip ${match.status === "live" ? "live" : ""}`}>
+              {match.status === "live" ? <RadioTower size={15} /> : <CalendarDays size={15} />}
+              {match.status === "live" ? "Transmision en vivo" : "Partido destacado"}
+            </span>
+            <span className="text-xs font-black uppercase tracking-[0.18em] text-white/58">
+              Fuente: {source} - {isLiveConnected ? "actualiza cada 30s" : "fixture conectado"}
+            </span>
+          </div>
+
+          <div>
+            <p className="section-kicker">Centro de cobertura Mundial 2026</p>
+            <h1 className="section-title max-w-4xl">La previa, el vivo y los numeros en una sola pantalla</h1>
+          </div>
+
+          <Link className="hero-match-grid" href={`/partido/${match.id}`}>
+            <div className="hero-team">
+              <FlagBadge size="xl" team={home} />
+              <h2 className="hero-team-name font-display">{home.name}</h2>
+              <span className="text-sm font-bold text-white/62">{home.group ? `Grupo ${home.group}` : match.phase}</span>
+            </div>
+
+            <div className="hero-score animate-score-pop">
+              <span>{scoreLabel(match)}</span>
+            </div>
+
+            <div className="hero-team">
+              <FlagBadge size="xl" team={away} />
+              <h2 className="hero-team-name font-display">{away.name}</h2>
+              <span className="text-sm font-bold text-white/62">{away.group ? `Grupo ${away.group}` : match.phase}</span>
+            </div>
+          </Link>
+
+          <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr_1fr] lg:items-end">
+            <div className="grid gap-2 text-sm font-bold text-white/68">
+              <span className="flex items-center gap-2"><Clock3 size={17} className="text-[#d9a441]" /> {formatArgentinaTime(match.kickoffAt)} ARG</span>
+              <span className="flex items-center gap-2"><Tv size={17} className="text-[#d9a441]" /> {channelLabel(match)}</span>
+            </div>
+
+            <div className="probability-rail">
+              <div className="flex justify-between text-xs font-black uppercase tracking-[0.14em] text-white/62">
+                <span>{home.name} {probs.homeWin}%</span>
+                <span>Empate {probs.draw}%</span>
+                <span>{away.name} {probs.awayWin}%</span>
+              </div>
+              <div className="probability-track">
+                <span className="bg-[#1db46a]" style={{ width: `${probs.homeWin}%` }} />
+                <span className="bg-[#f4f1e8]" style={{ width: `${probs.draw}%` }} />
+                <span className="bg-[#d9a441]" style={{ width: `${probs.awayWin}%` }} />
+              </div>
+            </div>
+
+            <Link className="broadcast-button justify-self-start px-5 py-3 text-sm font-black uppercase lg:justify-self-end" href={`/partido/${match.id}`}>
+              Abrir partido <ChevronRight className="inline" size={17} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default async function Home() {
   const { matches, teams, source, isLiveConnected } = await getWorldCupData();
   const matchGroups = visibleMatchGroups(matches);
+  const featured = featuredMatch(matches);
   const liveCount = matches.filter((match) => match.status === "live").length;
+  const finishedCount = matches.filter((match) => match.status === "finished").length;
 
   return (
-    <main className="relative mx-auto max-w-6xl px-2 py-3 sm:px-4 sm:py-6 md:py-8">
+    <main>
       <AutoRefresh seconds={30} />
-      <section className="sports-panel overflow-hidden rounded-2xl">
-        <div className="scoreboard-topline flex items-center justify-between gap-3 px-3 py-2 sm:px-4">
-          <span className="inline-flex items-center gap-2 text-xs font-black uppercase sm:text-sm">
-            <Trophy size={16} /> Mundial 2026
-          </span>
-          <span className="inline-flex items-center gap-2 text-xs font-black uppercase">
-            <Radio size={15} /> {isLiveConnected ? "Datos en vivo" : "Fixture oficial"}
-          </span>
-        </div>
+      {featured ? <Hero match={featured} teams={teams} source={source} isLiveConnected={isLiveConnected} /> : null}
 
-        <div className="border-b border-emerald-100/15 px-3 py-4 sm:px-5">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-wide text-[#d8ff3f]">Agenda Argentina</p>
-              <h1 className="font-display text-4xl leading-none text-white sm:text-5xl">Partidos</h1>
-            </div>
-            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-2 text-xs font-black uppercase text-stone-200/80">
-              <CalendarDays size={15} /> Hoy + proximos 2 dias
-            </span>
+      <section className="content-stage">
+        <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+          <div>
+            <p className="section-kicker">Match feed</p>
+            <h2 className="section-title">Partidos</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs font-black uppercase tracking-[0.12em] text-white/70 sm:grid-cols-3">
+            <span className="bg-white/[0.07] px-3 py-2">Live {liveCount}</span>
+            <span className="bg-white/[0.07] px-3 py-2">Final {finishedCount}</span>
+            <span className="hidden bg-white/[0.07] px-3 py-2 sm:block">ARG 24 hs</span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2 border-b border-emerald-100/15 px-3 py-2.5 sm:px-4 sm:py-3">
-          <div className="flex gap-2 text-xs font-black uppercase sm:text-sm">
-            <span className="rounded-full bg-[#d8ff3f] px-3 py-1 text-[#101312]">Todos</span>
-            <span className="rounded-full border border-white/10 px-3 py-1 text-white">Vivo ({liveCount})</span>
-          </div>
-          <span className="hidden rounded-full bg-white/[0.08] px-3 py-2 text-xs font-black text-white sm:inline-flex">
-            TV Argentina
-          </span>
-        </div>
-
-        <div className="px-3 py-2.5 sm:px-4 sm:py-3">
-          <span className="inline-flex items-center gap-2 text-xs font-bold text-emerald-100/70 sm:text-sm">
-            <RefreshCw size={16} /> {isLiveConnected ? "Resultados en vivo" : "Fixture real"}
-          </span>
-        </div>
-
-        <div className="px-0 pb-4">
+        <div className="grid gap-6">
           {matchGroups.map((group) => (
-            <section key={group.date}>
-              <div className="border-y border-emerald-100/20 bg-black/25 px-3 py-2 text-xs font-black uppercase text-white sm:px-4 sm:text-sm">
-                Mundial - {group.title} - {new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short" }).format(new Date(`${group.date}T12:00:00Z`))}
+            <section className="grid gap-3" key={group.date}>
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <p className="section-kicker">Mundial 2026</p>
+                  <h3 className="font-display text-4xl leading-none">{group.title}</h3>
+                </div>
+                <span className="text-xs font-black uppercase tracking-[0.14em] text-white/44">
+                  {new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short" }).format(new Date(`${group.date}T12:00:00Z`))}
+                </span>
               </div>
               {group.matches.length ? (
-                group.matches.map((match) => <MatchCard match={match} teams={teams} key={match.id} />)
+                <div className="grid gap-4">
+                  {group.matches.map((match) => <MatchCard match={match} teams={teams} key={match.id} />)}
+                </div>
               ) : (
-                <div className="border-t border-emerald-100/20 px-4 py-5 text-sm font-bold text-emerald-100/65">
-                  Sin partidos programados.
+                <div className="match-broadcast">
+                  <p className="text-sm font-bold text-white/62">Sin partidos programados.</p>
                 </div>
               )}
             </section>
           ))}
         </div>
-      </section>
-
-      <section className="sports-panel mt-4 flex flex-col gap-3 rounded-2xl p-3 sm:mt-6 sm:p-4 md:flex-row md:items-center md:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-white">Fuente: {source}</p>
-          <p className="mt-1 text-sm text-emerald-100/65">Horarios en Argentina, formato 24 hs. Canales sujetos a grilla oficial.</p>
-        </div>
-        <Link className="rounded-full bg-[#d8ff3f] px-4 py-2 text-center text-sm font-black uppercase text-[#101312]" href="/fixture">
-          Fixture completo
-        </Link>
       </section>
     </main>
   );

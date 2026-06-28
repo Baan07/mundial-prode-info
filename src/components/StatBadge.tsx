@@ -1,8 +1,8 @@
 export function StatBadge({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-[#151a18] px-3 py-2">
-      <div className="text-[11px] font-black uppercase tracking-wide text-stone-300/65">{label}</div>
-      <div className="break-words text-base font-black leading-tight text-white sm:text-lg">{value}</div>
+    <div className="broadcast-card px-3 py-3">
+      <div className="text-[11px] font-black uppercase tracking-[0.14em] text-white/45">{label}</div>
+      <div className="break-words font-display text-3xl leading-none text-white">{value}</div>
     </div>
   );
 }

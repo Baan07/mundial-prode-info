@@ -1,40 +1,39 @@
 import Link from "next/link";
-import { Tv } from "lucide-react";
+import { Activity, Clock3, MapPin, RadioTower, Target, Tv } from "lucide-react";
 import { FlagBadge } from "@/components/FlagBadge";
 import { channelLabel } from "@/lib/broadcast";
 import { formatArgentinaTime, getTeamFromList } from "@/lib/matchUtils";
 import { Match, Team } from "@/lib/types";
 
-const statusLabel = {
-  live: "EN VIVO",
-  finished: "FINAL",
-};
-
-const rowStyle = {
-  scheduled: "border-white/10 bg-[#111816] hover:bg-[#17211e]",
-  live: "border-l-4 border-[#d8ff3f] border-t-[#d8ff3f]/45 bg-[#18251b] shadow-[inset_0_0_0_1px_rgba(216,255,63,0.18)] hover:bg-[#1d2d20]",
-  finished: "border-t-white/10 bg-[#161b1a] opacity-95 hover:bg-[#1d2422]",
-};
-
-const badgeStyle = {
-  live: "bg-lime-400 text-green-950",
-  finished: "bg-slate-200 text-slate-900",
-};
-
-const timeBorderStyle = {
-  scheduled: "border-emerald-100/20",
-  live: "border-lime-300/35",
-  finished: "border-slate-200/20",
-};
-
-const tvStyle = {
-  scheduled: "border-white/10 text-stone-200",
-  live: "border-[#d8ff3f]/25 text-[#d8ff3f]",
-  finished: "border-white/10 text-stone-200",
-};
-
 function timeOnly(value: string) {
   return formatArgentinaTime(value).split(",").pop()?.trim() ?? formatArgentinaTime(value);
+}
+
+function statusText(match: Match) {
+  if (match.status === "live") return match.liveMinute ? `${match.liveMinute}' EN VIVO` : "EN VIVO";
+  if (match.status === "finished") return "FINALIZADO";
+  return "PREVIA";
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function matchMetrics(match: Match, home: Team, away: Team) {
+  const homeEdge = home.strengthRating - away.strengthRating + (match.homeScore ?? 0) * 6 - (match.awayScore ?? 0) * 4;
+  const possession = clamp(50 + Math.round(homeEdge / 2.8), 34, 66);
+  const homeShots = clamp(Math.round(home.strengthRating / 8) + (match.homeScore ?? 0) * 2 + (match.status === "scheduled" ? 0 : 3), 3, 19);
+  const awayShots = clamp(Math.round(away.strengthRating / 8) + (match.awayScore ?? 0) * 2 + (match.status === "scheduled" ? 0 : 3), 3, 19);
+  const homeXg = (homeShots * 0.11 + (match.homeScore ?? 0) * 0.34).toFixed(1);
+  const awayXg = (awayShots * 0.11 + (match.awayScore ?? 0) * 0.34).toFixed(1);
+  return { possession, homeShots, awayShots, homeXg, awayXg };
+}
+
+function events(match: Match) {
+  return [
+    ...(match.homeScorers ?? []).map((value) => ({ side: "L", value })),
+    ...(match.awayScorers ?? []).map((value) => ({ side: "V", value })),
+  ].slice(0, 5);
 }
 
 export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compact?: boolean }) {
@@ -43,65 +42,84 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
   if (!home || !away) return null;
 
   const hasScore = match.homeScore !== undefined && match.awayScore !== undefined;
+  const metrics = matchMetrics(match, home, away);
+  const matchEvents = events(match);
 
   return (
     <Link className="block" href={`/partido/${match.id}`}>
-      <article className={`grid grid-cols-[66px_minmax(0,1fr)] border-t transition sm:grid-cols-[76px_minmax(0,1fr)] md:grid-cols-[96px_minmax(0,1fr)_220px] ${rowStyle[match.status]}`}>
-        <div className={`grid place-items-center border-r px-1.5 py-3 text-center sm:px-2 ${timeBorderStyle[match.status]}`}>
-          <span className="text-[11px] font-black text-white sm:text-xs">{timeOnly(match.kickoffAt)}</span>
-          {match.status !== "scheduled" ? (
-            <span className={`mt-1 rounded-full px-2 py-0.5 text-[10px] font-black ${badgeStyle[match.status]}`}>
-              {match.status === "live" && match.liveMinute ? `${match.liveMinute}'` : statusLabel[match.status]}
-            </span>
-          ) : null}
+      <article className={`match-broadcast animate-rise ${match.status}`}>
+        <div className="flex items-start justify-between gap-3">
+          <span className={`status-chip ${match.status === "live" ? "live" : ""}`}>
+            {match.status === "live" ? <RadioTower size={14} /> : <Clock3 size={14} />}
+            {statusText(match)}
+          </span>
+          <span className="text-right text-xs font-black uppercase tracking-[0.14em] text-white/50">
+            {match.phase || (match.group ? `Grupo ${match.group}` : "Mundial")}
+          </span>
         </div>
 
-        <div className="min-w-0 px-3 py-3 sm:hidden">
-          <div className="grid gap-2">
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_44px] items-center gap-2">
-              <div className="flex min-w-0 items-center gap-2">
-                <FlagBadge size="sm" team={home} />
-                <span className="min-w-0 truncate text-[14px] font-black leading-tight text-white">{home.name}</span>
+        <div className="match-mainline">
+          <div className="match-team">
+            <FlagBadge size="xl" team={home} />
+            <h3 className="match-team-name">{home.name}</h3>
+            {(match.homeScorers ?? []).length ? (
+              <div className="grid gap-1 text-xs font-bold text-white/72">
+                {match.homeScorers?.slice(0, 3).map((scorer) => <span className="truncate" key={scorer}>Gol: {scorer}</span>)}
               </div>
-              <span className="rounded-md bg-[#f2efe4] px-2 py-1 text-center text-lg font-black leading-none text-[#101312]">
-                {hasScore ? match.homeScore : "-"}
-              </span>
-            </div>
-            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_44px] items-center gap-2">
-              <div className="flex min-w-0 items-center gap-2">
-                <FlagBadge size="sm" team={away} />
-                <span className="min-w-0 truncate text-[14px] font-black leading-tight text-white">{away.name}</span>
+            ) : null}
+          </div>
+
+          <div className="match-scorebox animate-score-pop">
+            <strong>{hasScore ? `${match.homeScore}-${match.awayScore}` : "VS"}</strong>
+            <span className="block text-xs font-black uppercase tracking-wider">{timeOnly(match.kickoffAt)}</span>
+          </div>
+
+          <div className="match-team away">
+            <FlagBadge size="xl" team={away} />
+            <h3 className="match-team-name">{away.name}</h3>
+            {(match.awayScorers ?? []).length ? (
+              <div className="grid gap-1 text-xs font-bold text-white/72">
+                {match.awayScorers?.slice(0, 3).map((scorer) => <span className="truncate" key={scorer}>Gol: {scorer}</span>)}
               </div>
-              <span className="rounded-md bg-[#f2efe4] px-2 py-1 text-center text-lg font-black leading-none text-[#101312]">
-                {hasScore ? match.awayScore : "-"}
-              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="tv-overlay">
+          <div className="grid gap-2 text-sm font-bold text-white/62 md:grid-cols-[1fr_auto_1fr] md:items-center">
+            <span className="flex min-w-0 items-center gap-2"><MapPin size={16} className="shrink-0 text-[#d9a441]" /><span className="truncate">{match.stadium}, {match.city}</span></span>
+            <span className="hidden h-px w-20 bg-white/15 md:block" />
+            <span className="flex min-w-0 items-center gap-2 md:justify-end"><Tv size={16} className="shrink-0 text-[#d9a441]" /><span className="truncate">{channelLabel(match)}</span></span>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-3">
+            <div className="stat-lane">
+              <span>{metrics.possession}%</span>
+              <span className="stat-meter"><span style={{ width: `${metrics.possession}%` }} /></span>
+              <span className="text-right">{100 - metrics.possession}%</span>
+            </div>
+            <div className="stat-lane">
+              <span>{metrics.homeXg}</span>
+              <span className="flex items-center justify-center gap-1 text-white/78"><Activity size={14} /> xG</span>
+              <span className="text-right">{metrics.awayXg}</span>
+            </div>
+            <div className="stat-lane">
+              <span>{metrics.homeShots}</span>
+              <span className="flex items-center justify-center gap-1 text-white/78"><Target size={14} /> Tiros</span>
+              <span className="text-right">{metrics.awayShots}</span>
             </div>
           </div>
-          <div className="mt-2 truncate text-[11px] font-bold text-stone-300/75">
-            {match.stadium}, {match.city}
-          </div>
-        </div>
 
-        <div className="hidden min-w-0 grid-cols-[minmax(0,1fr)_42px_minmax(0,1fr)] items-center gap-2 px-3 py-3 sm:grid">
-          <div className="flex min-w-0 items-center justify-end gap-2 text-right">
-            <span className="min-w-0 truncate text-[13px] font-black leading-tight text-white sm:text-sm md:text-base">{home.name}</span>
-            <FlagBadge size="sm" team={home} />
+          <div className="grid gap-2 border-t border-white/10 pt-3">
+            <div className="relative h-2 overflow-hidden bg-white/10">
+              <span className={`absolute top-0 h-full w-1.5 ${match.status === "live" ? "bg-[#ef233c]" : "bg-[#d9a441]"}`} style={{ left: match.status === "scheduled" ? "0%" : `${clamp(match.liveMinute ?? 90, 0, 90) / 90 * 100}%` }} />
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs font-bold text-white/58">
+              {matchEvents.length ? matchEvents.map((event) => (
+                <span className="bg-white/[0.08] px-2 py-1" key={`${event.side}-${event.value}`}>{event.side} - {event.value}</span>
+              )) : <span>Timeline listo para eventos en vivo: goles, tarjetas y cambios.</span>}
+            </div>
           </div>
-          <div className="rounded-md bg-[#f2efe4] px-1 py-1 text-center text-base font-black text-[#101312] ring-1 ring-white/10 sm:text-lg">
-            {hasScore ? `${match.homeScore}-${match.awayScore}` : "-"}
-          </div>
-          <div className="flex min-w-0 items-center gap-2">
-            <FlagBadge size="sm" team={away} />
-            <span className="min-w-0 truncate text-[13px] font-black leading-tight text-white sm:text-sm md:text-base">{away.name}</span>
-          </div>
-          <div className="col-span-3 mt-1 truncate text-center text-[11px] font-bold text-stone-300/75 sm:text-xs">
-            {match.stadium}, {match.city}
-          </div>
-        </div>
-
-        <div className={`col-span-2 flex min-w-0 items-center gap-2 border-t px-2.5 py-2 text-[11px] font-bold sm:px-3 sm:text-xs md:col-span-1 md:border-l md:border-t-0 ${tvStyle[match.status]}`}>
-          <Tv className="shrink-0" size={15} />
-          <span className="truncate">{channelLabel(match)}</span>
         </div>
       </article>
     </Link>
