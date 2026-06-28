@@ -13,8 +13,8 @@ export default async function FixturePage() {
       <AutoRefresh seconds={30} />
       <section className="mb-7">
         <p className="section-kicker">{isLiveConnected ? "Resultados en vivo cada 30s" : "Fixture real - TV Argentina"}</p>
-        <h1 className="section-title">Fixture Mundial 2026</h1>
-        <p className="mt-2 max-w-2xl text-sm font-bold text-white/58">Filtros, grupos y cruces dentro del centro de cobertura.</p>
+        <h1 className="section-title">Cruces desde 16avos</h1>
+        <p className="mt-2 max-w-2xl text-sm font-bold text-white/58">Partidos pendientes de eliminacion directa. Los jugados se limpian automaticamente.</p>
       </section>
 
       <FixtureExplorer groups={groups} matches={matches} teams={teams} />

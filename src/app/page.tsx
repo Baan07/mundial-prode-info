@@ -56,6 +56,15 @@ function dayTitle(date: string, index: number) {
   }).format(new Date(`${date}T12:00:00Z`));
 }
 
+function fullDayTitle(date: string) {
+  return new Intl.DateTimeFormat("es-AR", {
+    day: "2-digit",
+    month: "long",
+    timeZone: "America/Argentina/Buenos_Aires",
+    weekday: "long",
+  }).format(new Date(`${date}T12:00:00Z`));
+}
+
 function isLateNightCarryover(match: Match, today: string) {
   const previousDay = addDays(today, -1);
   const kickoff = new Date(match.kickoffAt).getTime();
@@ -97,6 +106,18 @@ function visibleMatchGroups(matches: Match[]) {
       .filter((match) => argentinaDate(match.kickoffAt) === date)
       .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime()),
   }));
+}
+
+function isKnockoutFromRoundOf32(match: Match) {
+  return match.phase !== "Fase de grupos";
+}
+
+function upcomingKnockoutMatches(matches: Match[], limit = 3) {
+  return matches
+    .filter((match) => isKnockoutFromRoundOf32(match))
+    .filter((match) => match.status !== "finished")
+    .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime())
+    .slice(0, limit);
 }
 
 function featuredMatch(matches: Match[]) {
@@ -193,10 +214,11 @@ function Hero({ match, teams, source, isLiveConnected }: { match: Match; teams: 
 
 export default async function Home() {
   const { matches, teams, source, isLiveConnected } = await getWorldCupData();
-  const matchGroups = visibleMatchGroups(matches);
-  const featured = featuredMatch(matches);
-  const liveCount = matches.filter((match) => match.status === "live").length;
-  const finishedCount = matches.filter((match) => match.status === "finished").length;
+  const visibleMatches = upcomingKnockoutMatches(matches, 3);
+  const matchGroups = visibleMatchGroups(visibleMatches);
+  const featured = featuredMatch(visibleMatches);
+  const liveCount = visibleMatches.filter((match) => match.status === "live").length;
+  const scheduledCount = visibleMatches.filter((match) => match.status === "scheduled").length;
 
   return (
     <main>
@@ -206,12 +228,12 @@ export default async function Home() {
       <section className="content-stage">
         <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
           <div>
-            <p className="section-kicker">Match feed</p>
-            <h2 className="section-title">Partidos</h2>
+            <p className="section-kicker">Desde 16avos</p>
+            <h2 className="section-title">Proximos 3 partidos</h2>
           </div>
           <div className="grid grid-cols-2 gap-2 text-xs font-black uppercase tracking-[0.12em] text-white/70 sm:grid-cols-3">
             <span className="bg-white/[0.07] px-3 py-2">Live {liveCount}</span>
-            <span className="bg-white/[0.07] px-3 py-2">Final {finishedCount}</span>
+            <span className="bg-white/[0.07] px-3 py-2">A jugar {scheduledCount}</span>
             <span className="hidden bg-white/[0.07] px-3 py-2 sm:block">ARG 24 hs</span>
           </div>
         </div>
@@ -221,8 +243,8 @@ export default async function Home() {
             <section className="grid gap-3" key={group.date}>
               <div className="flex items-end justify-between gap-3">
                 <div>
-                  <p className="section-kicker">Mundial 2026</p>
-                  <h3 className="font-display text-4xl leading-none">{group.title}</h3>
+                  <p className="section-kicker">{group.title}</p>
+                  <h3 className="font-display text-4xl leading-none capitalize">{fullDayTitle(group.date)}</h3>
                 </div>
                 <span className="text-xs font-black uppercase tracking-[0.14em] text-white/44">
                   {new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short" }).format(new Date(`${group.date}T12:00:00Z`))}
