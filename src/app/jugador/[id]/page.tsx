@@ -10,11 +10,11 @@ export default async function PlayerPage({ params }: Props) {
   if (!player) notFound();
   const team = getTeam(player.teamId);
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
-      <section className="rounded-lg border border-white/10 bg-white/[0.05] p-6">
-        <p className="text-sky-200/70">{team?.flag} {team?.name} · {player.position}</p>
-        <h1 className="mt-2 text-5xl font-black text-white">{player.name}</h1>
-        <p className="mt-3 text-sky-100/70">{player.currentClub}, {player.clubCountry} · {player.age} anos · Camiseta #{player.shirtNumber ?? "-"}</p>
+    <main className="mx-auto max-w-4xl px-3 py-5 sm:px-4 sm:py-8">
+      <section className="sports-panel broadcast-field rounded-2xl p-5 sm:p-6">
+        <p className="text-sm font-bold text-stone-300/75">{team?.flag} {team?.name} - {player.position}</p>
+        <h1 className="mt-2 font-display text-6xl leading-none text-white sm:text-7xl">{player.name}</h1>
+        <p className="mt-3 text-stone-300/75">{player.currentClub}, {player.clubCountry} - {player.age} anos - Camiseta #{player.shirtNumber ?? "-"}</p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <StatBadge label="Goles" value={player.goals} />
           <StatBadge label="Asistencias" value={player.assists} />
@@ -23,7 +23,7 @@ export default async function PlayerPage({ params }: Props) {
           <StatBadge label="Amarillas" value={player.yellowCards} />
           <StatBadge label="Rojas" value={player.redCards} />
         </div>
-        <p className="mt-6 text-sky-100/70">Historial basico preparado para cargar datos de clubes, torneos previos y rendimiento reciente desde el panel admin o una API externa.</p>
+        <p className="mt-6 text-stone-300/70">Historial basico preparado para cargar datos de clubes, torneos previos y rendimiento reciente desde el panel admin o una API externa.</p>
       </section>
     </main>
   );

@@ -72,9 +72,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </nav>
         </header>
         {children}
-        <footer className="relative mx-auto max-w-7xl px-4 py-8 text-sm text-emerald-100/60">
+        <footer className="relative mx-auto max-w-7xl px-4 py-8 text-sm text-[#101312]/70">
           <p>Fixture, resultados en vivo, equipos, goleadores y formaciones. Horarios en Argentina.</p>
-          <p className="mt-2 font-bold text-emerald-100/75">
+          <p className="mt-2 font-bold text-[#101312]">
             Pagina creada por Matias Flores - matiasflores07@icloud.com
           </p>
         </footer>

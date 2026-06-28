@@ -9,10 +9,13 @@ const tips = [
 
 export default function TipsPage() {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="text-4xl font-black text-white">Datos utiles para prode</h1>
+    <main className="mx-auto max-w-5xl px-3 py-5 sm:px-4 sm:py-8">
+      <section className="sports-panel broadcast-field rounded-2xl p-4 sm:p-6">
+        <p className="text-xs font-black uppercase tracking-wide text-[#d8ff3f]">Sala tactica</p>
+        <h1 className="font-display text-5xl leading-none text-white sm:text-6xl">Datos utiles para prode</h1>
+      </section>
       <section className="mt-6 grid gap-4 md:grid-cols-2">
-        {tips.map(([title, body]) => <article className="rounded-lg border border-white/10 bg-white/[0.05] p-4" key={title}><h2 className="text-xl font-bold text-white">{title}</h2><p className="mt-2 text-sky-100/70">{body}</p></article>)}
+        {tips.map(([title, body]) => <article className="broadcast-card rounded-2xl p-4" key={title}><h2 className="text-xl font-black text-white">{title}</h2><p className="mt-2 text-stone-300/70">{body}</p></article>)}
       </section>
     </main>
   );

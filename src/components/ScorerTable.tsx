@@ -49,9 +49,9 @@ export function ScorerTable({ matches, teams }: { matches: Match[]; teams: Team[
     .slice(0, 30);
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-emerald-100/15 bg-[#062f1d]/95">
+    <div className="overflow-x-auto rounded-xl border border-white/10 bg-[#151a18]">
       <table className="w-full min-w-[620px] text-left text-sm">
-        <thead className="bg-[#052617] text-xs uppercase text-emerald-100/60">
+        <thead className="bg-[#f2efe4] text-xs uppercase text-[#101312]/70">
           <tr>
             <th className="p-3">#</th>
             <th>Jugador</th>
@@ -60,11 +60,11 @@ export function ScorerTable({ matches, teams }: { matches: Match[]; teams: Team[
             <th>Minutos</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-emerald-100/10">
+        <tbody className="divide-y divide-white/10">
           {rows.length ? (
             rows.map((row, index) => (
-              <tr className="text-emerald-50" key={`${row.team.id}-${row.player}`}>
-                <td className="p-3 font-black text-lime-300">{index + 1}</td>
+              <tr className="text-stone-100" key={`${row.team.id}-${row.player}`}>
+                <td className="p-3 font-black text-[#d8ff3f]">{index + 1}</td>
                 <td className="font-black text-white">{row.player}</td>
                 <td>
                   <span className="flex min-w-0 items-center gap-2">
@@ -72,13 +72,13 @@ export function ScorerTable({ matches, teams }: { matches: Match[]; teams: Team[
                     <span className="truncate">{row.team.name}</span>
                   </span>
                 </td>
-                <td className="text-center text-base font-black text-lime-300">{row.goals}</td>
-                <td className="text-emerald-100/70">{row.minutes.join(", ") || "-"}</td>
+                <td className="text-center text-base font-black text-[#d8ff3f]">{row.goals}</td>
+                <td className="text-stone-300/70">{row.minutes.join(", ") || "-"}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td className="p-4 text-center font-bold text-emerald-100/60" colSpan={5}>
+              <td className="p-4 text-center font-bold text-stone-300/70" colSpan={5}>
                 Todavia no hay goles cargados.
               </td>
             </tr>
