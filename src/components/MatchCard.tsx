@@ -5,8 +5,8 @@ import { channelLabel } from "@/lib/broadcast";
 import { formatArgentinaTime, getTeamFromList } from "@/lib/matchUtils";
 import { Match, Team } from "@/lib/types";
 
-function timeOnly(value: string) {
-  return formatArgentinaTime(value).split(",").pop()?.trim() ?? formatArgentinaTime(value);
+function dateTimeLabel(value: string) {
+  return formatArgentinaTime(value).replace(/,/g, "").toUpperCase();
 }
 
 function statusText(match: Match) {
@@ -70,9 +70,12 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
             {match.status === "live" ? <RadioTower size={14} /> : <Clock3 size={14} />}
             {statusText(match)}
           </span>
-          <span className="text-right text-xs font-black uppercase tracking-[0.14em] text-white/50">
-            {match.phase || (match.group ? `Grupo ${match.group}` : "Mundial")}
-          </span>
+          <div className="grid gap-1 text-right">
+            <span className="text-xs font-black uppercase tracking-[0.14em] text-[#d9a441]">{dateTimeLabel(match.kickoffAt)} ARG</span>
+            <span className="text-xs font-black uppercase tracking-[0.14em] text-white/50">
+              {match.phase || (match.group ? `Grupo ${match.group}` : "Mundial")}
+            </span>
+          </div>
         </div>
 
         <div className="match-mainline">
@@ -84,7 +87,7 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
 
           <div className="match-scorebox animate-score-pop">
             <strong>{hasScore ? `${match.homeScore}-${match.awayScore}` : "VS"}</strong>
-            <span className="block text-xs font-black uppercase tracking-wider">{timeOnly(match.kickoffAt)}</span>
+            <span className="block text-xs font-black uppercase tracking-wider">{dateTimeLabel(match.kickoffAt)}</span>
           </div>
 
           <div className="match-team away">

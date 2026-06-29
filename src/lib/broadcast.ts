@@ -21,6 +21,9 @@ const channelsByMatchNumber: Record<number, string[]> = {
   70: ["TV Publica", "Telefe", "TyC Sports", "DSports", "Disney+", "Paramount+"],
   71: ["DSports", "DGO"],
   72: ["DSports 2", "DGO"],
+  74: ["TyC Sports", "TyC Sports Play"],
+  75: ["DSports", "DGO"],
+  76: ["Telefe", "DSports", "DGO"],
 };
 
 export function argentinaChannels(match: Match) {
