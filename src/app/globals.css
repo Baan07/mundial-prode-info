@@ -177,7 +177,7 @@ button {
   background:
     linear-gradient(90deg, rgba(6, 7, 10, 0.94), rgba(6, 7, 10, 0.32) 52%, rgba(6, 7, 10, 0.88)),
     linear-gradient(180deg, rgba(6, 7, 10, 0.08), rgba(6, 7, 10, 0.94)),
-    url("/assets/stadium-broadcast.png") center / cover;
+    url("/assets/stadium-broadcast.webp") center / cover;
 }
 
 .stadium-hero::before {

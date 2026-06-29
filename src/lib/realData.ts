@@ -9,6 +9,21 @@ const FIXTURES_URL = "https://www.thestatsapi.com/world-cup/data/fixtures.json";
 const PROMIEDOS_WORLD_CUP_URL = "https://www.promiedos.com.ar/league/fifa-world-cup/fjda";
 const PROMIEDOS_API_URL = "https://api.promiedos.com.ar";
 const PROMIEDOS_VERSION = "1.11.7.3";
+const FAST_CACHE_MS = 25 * 1000;
+const FIXTURES_TIMEOUT_MS = 2500;
+const PROMIEDOS_TIMEOUT_MS = 1800;
+const PROMIEDOS_FILTER_TIMEOUT_MS = 900;
+const LIVE_API_TIMEOUT_MS = 900;
+
+type WorldCupData = {
+  teams: Team[];
+  matches: Match[];
+  players: typeof fallbackPlayers;
+  source: string;
+  isLiveConnected: boolean;
+};
+
+let cachedWorldCupData: { expiresAt: number; data: WorldCupData } | undefined;
 
 type StatsApiFixture = {
   matchNumber: number;
@@ -110,6 +125,19 @@ type EspnTeamsResponse = {
     }>;
   }>;
 };
+
+async function fetchWithTimeout(input: string, init: RequestInit = {}, timeoutMs = 1500) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 const flagByTeam: Record<string, string> = {
   Algeria: "🇩🇿",
@@ -444,9 +472,9 @@ function toMatch(fixture: StatsApiFixture, overlay?: LiveOverlay): Match {
 }
 
 async function fetchFixtures() {
-  const response = await fetch(FIXTURES_URL, {
+  const response = await fetchWithTimeout(FIXTURES_URL, {
     next: { revalidate: 60 * 30 },
-  });
+  }, FIXTURES_TIMEOUT_MS);
   if (!response.ok) throw new Error("No se pudo cargar fixtures reales");
   const payload = (await response.json()) as { fixtures: StatsApiFixture[] };
   return payload.fixtures;
@@ -662,10 +690,10 @@ async function fetchLiveOverlay(fixtures: StatsApiFixture[]) {
   if (!key) return new Map<string, LiveOverlay>();
 
   try {
-    const response = await fetch(`${baseUrl.replace(/\/$/, "")}/fixtures?live=all`, {
+    const response = await fetchWithTimeout(`${baseUrl.replace(/\/$/, "")}/fixtures?live=all`, {
       headers: { "x-apisports-key": key },
-      cache: "no-store",
-    });
+      next: { revalidate: 30 },
+    }, LIVE_API_TIMEOUT_MS);
     if (!response.ok) return new Map<string, LiveOverlay>();
     const payload = await response.json() as {
       response?: Array<{
@@ -714,10 +742,10 @@ function mergeOverlay(base?: LiveOverlay, next?: LiveOverlay) {
 
 async function fetchPromiedosFilterGames(leagueId: string, key: string) {
   try {
-    const response = await fetch(`${PROMIEDOS_API_URL}/league/games/${leagueId}/${key}`, {
-      cache: "no-store",
+    const response = await fetchWithTimeout(`${PROMIEDOS_API_URL}/league/games/${leagueId}/${key}`, {
+      next: { revalidate: 30 },
       headers: { "X-VER": PROMIEDOS_VERSION },
-    });
+    }, PROMIEDOS_FILTER_TIMEOUT_MS);
     if (!response.ok) return [];
     const payload = await response.json() as { games?: PromiedosGame[] };
     return payload.games ?? [];
@@ -752,7 +780,7 @@ async function collectPromiedosGames(payload: PromiedosPageData) {
 
 async function fetchPromiedosOverlay(fixtures: StatsApiFixture[]) {
   try {
-    const response = await fetch(PROMIEDOS_WORLD_CUP_URL, { cache: "no-store" });
+    const response = await fetchWithTimeout(PROMIEDOS_WORLD_CUP_URL, { next: { revalidate: 30 } }, PROMIEDOS_TIMEOUT_MS);
     if (!response.ok) return new Map<string, LiveOverlay>();
     const html = await response.text();
     const json = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/)?.[1];
@@ -911,6 +939,10 @@ function resolveKnockoutFixtures(fixtures: StatsApiFixture[], rankings: Map<stri
 }
 
 export async function getWorldCupData() {
+  if (cachedWorldCupData && cachedWorldCupData.expiresAt > Date.now()) {
+    return cachedWorldCupData.data;
+  }
+
   try {
     const fixtures = await fetchFixtures();
     const [promiedosOverlays, apiOverlays] = await Promise.all([
@@ -949,21 +981,25 @@ export async function getWorldCupData() {
     }
     const matches = resolvedFixtures.map((fixture) => toMatch(fixture, overlays.get(String(fixture.matchNumber))));
     const teams = applyGroupStandings(Array.from(resolvedTeamMap.values()), matches);
-    return {
+    const data = {
       teams,
       matches,
       players: fallbackPlayers,
       source: "TheStatsAPI fixtures + Promiedos live + API overlay",
       isLiveConnected: Boolean(process.env.FOOTBALL_API_KEY) || promiedosOverlays.size > 0,
     };
+    cachedWorldCupData = { data, expiresAt: Date.now() + FAST_CACHE_MS };
+    return data;
   } catch {
-    return {
+    const fallbackData = {
       teams: fallbackTeams,
       matches: fallbackMatches,
       players: fallbackPlayers,
       source: "Datos locales de respaldo",
       isLiveConnected: false,
     };
+    cachedWorldCupData = { data: fallbackData, expiresAt: Date.now() + 5000 };
+    return fallbackData;
   }
 }
 
