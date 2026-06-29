@@ -124,8 +124,7 @@ function hasRealScore(match: Match) {
 function liveAndTodayResults(matches: Match[]) {
   const today = todayInArgentina();
   return matches
-    .filter((match) => hasRealScore(match))
-    .filter((match) => match.status === "live" || (match.status === "finished" && belongsToVisibleDate(match, today, 0, today)))
+    .filter((match) => match.status === "live" || (hasRealScore(match) && match.status === "finished" && belongsToVisibleDate(match, today, 0, today)))
     .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime());
 }
 
