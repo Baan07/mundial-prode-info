@@ -11,9 +11,9 @@ const PROMIEDOS_API_URL = "https://api.promiedos.com.ar";
 const PROMIEDOS_VERSION = "1.11.7.3";
 const FAST_CACHE_MS = 25 * 1000;
 const FIXTURES_TIMEOUT_MS = 2500;
-const PROMIEDOS_TIMEOUT_MS = 1800;
-const PROMIEDOS_FILTER_TIMEOUT_MS = 900;
-const LIVE_API_TIMEOUT_MS = 900;
+const PROMIEDOS_TIMEOUT_MS = 3500;
+const PROMIEDOS_FILTER_TIMEOUT_MS = 2200;
+const LIVE_API_TIMEOUT_MS = 2500;
 
 type WorldCupData = {
   teams: Team[];
@@ -448,6 +448,7 @@ function toMatch(fixture: StatsApiFixture, overlay?: LiveOverlay): Match {
   const homeTeamId = slug(fixture.homeTeam);
   const awayTeamId = slug(fixture.awayTeam);
   const baseStatus = statusFromKickoff(fixture.kickoffUtc);
+  const fallbackStatus = baseStatus === "live" ? "scheduled" : baseStatus;
 
   return {
     id: `m-${fixture.matchNumber}`,
@@ -459,7 +460,7 @@ function toMatch(fixture: StatsApiFixture, overlay?: LiveOverlay): Match {
     stadium: fixture.stadium,
     city: cityName(fixture.hostCity),
     kickoffAt: fixture.kickoffUtc,
-    status: overlay?.status ?? baseStatus,
+    status: overlay?.status ?? fallbackStatus,
     homeScore: overlay?.homeScore,
     awayScore: overlay?.awayScore,
     liveMinute: overlay?.liveMinute,
@@ -545,6 +546,13 @@ function scorersFromPromiedosTeam(team?: PromiedosTeam) {
     const type = goal.goal_type ? ` (${goal.goal_type})` : "";
     return `${player}${minute}${type}`;
   });
+}
+
+function minuteFromPromiedos(game: PromiedosGame) {
+  if (game.game_time && game.game_time > 0) return game.game_time;
+  const raw = `${game.game_time_to_display ?? ""} ${game.game_time_status_to_display ?? ""}`;
+  const minute = raw.match(/\d{1,3}/)?.[0];
+  return minute ? Number(minute) : undefined;
 }
 
 function espnSearchName(teamId: string) {
@@ -809,7 +817,7 @@ async function fetchPromiedosOverlay(fixtures: StatsApiFixture[]) {
         status: statusFromPromiedos(game),
         homeScore: scores ? scores[homeIsFixtureHome ? 0 : 1] : undefined,
         awayScore: scores ? scores[homeIsFixtureHome ? 1 : 0] : undefined,
-        liveMinute: game.game_time && game.game_time > 0 ? game.game_time : undefined,
+        liveMinute: minuteFromPromiedos(game),
         homeScorers,
         awayScorers,
         scorers: [...homeScorers, ...awayScorers],

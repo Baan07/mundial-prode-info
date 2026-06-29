@@ -11,9 +11,7 @@ function argentinaHourLabel(value: string) {
 
 function displayLiveMinute(match: Match) {
   if (match.status !== "live") return undefined;
-  if (match.liveMinute) return match.liveMinute;
-  const elapsed = Math.floor((Date.now() - new Date(match.kickoffAt).getTime()) / 60000);
-  return clamp(elapsed, 1, 120);
+  return match.liveMinute;
 }
 
 function statusText(match: Match) {
@@ -67,7 +65,7 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
   if (!home || !away) return null;
 
   const hasScore = match.homeScore !== undefined && match.awayScore !== undefined;
-  const scoreLabel = hasScore ? `${match.homeScore}-${match.awayScore}` : match.status === "live" ? "0-0" : "VS";
+  const scoreLabel = hasScore ? `${match.homeScore}-${match.awayScore}` : "VS";
   const liveMinute = displayLiveMinute(match);
   const metrics = matchMetrics(match, home, away);
   const matchEvents = events(match);
