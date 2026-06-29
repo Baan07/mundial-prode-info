@@ -5,8 +5,8 @@ import { channelLabel } from "@/lib/broadcast";
 import { formatArgentinaTime, getTeamFromList } from "@/lib/matchUtils";
 import { Match, Team } from "@/lib/types";
 
-function dateTimeLabel(value: string) {
-  return formatArgentinaTime(value).replace(/,/g, "").toUpperCase();
+function argentinaHourLabel(value: string) {
+  return `${formatArgentinaTime(value).split(",").pop()?.trim() ?? formatArgentinaTime(value)} ARG`;
 }
 
 function statusText(match: Match) {
@@ -70,7 +70,7 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
             {match.status === "live" ? <RadioTower size={14} /> : <Clock3 size={14} />}
             {statusText(match)}
           </span>
-          <span className="match-date-time">{dateTimeLabel(match.kickoffAt)} ARG</span>
+          <span className="match-date-time">{argentinaHourLabel(match.kickoffAt)}</span>
           <span className="text-right text-xs font-black uppercase tracking-[0.14em] text-white/50">
             {match.phase || (match.group ? `Grupo ${match.group}` : "Mundial")}
           </span>

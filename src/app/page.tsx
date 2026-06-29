@@ -84,7 +84,8 @@ function visibleMatchGroups(matches: Match[]) {
       .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime()),
   }));
 
-  if (groups.some((group) => group.matches.length)) return groups;
+  const groupsWithMatches = groups.filter((group) => group.matches.length);
+  if (groupsWithMatches.length) return groupsWithMatches;
 
   const nextDates = Array.from(
     new Set(
@@ -152,15 +153,9 @@ export default async function Home() {
                   {new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short" }).format(new Date(`${group.date}T12:00:00Z`))}
                 </span>
               </div>
-              {group.matches.length ? (
-                <div className="grid gap-4">
-                  {group.matches.map((match) => <MatchCard match={match} teams={teams} key={match.id} />)}
-                </div>
-              ) : (
-                <div className="match-broadcast">
-                  <p className="text-sm font-bold text-white/62">Sin partidos programados.</p>
-                </div>
-              )}
+              <div className="grid gap-4">
+                {group.matches.map((match) => <MatchCard match={match} teams={teams} key={match.id} />)}
+              </div>
             </section>
           ))}
         </div>
