@@ -50,6 +50,7 @@ type LiveOverlay = {
 };
 
 type PromiedosGame = {
+  id?: string;
   to_qualify?: number;
   stage_round_name?: string;
   teams?: Array<{
@@ -96,6 +97,10 @@ type PromiedosPageData = {
 
 type PromiedosGamesResponse = {
   games?: PromiedosGame[];
+};
+
+type PromiedosGamecenterResponse = {
+  game?: PromiedosGame;
 };
 
 const PROMIEDOS_LATEST_FALLBACK: PromiedosGame[] = [
@@ -974,6 +979,49 @@ async function fetchPromiedosLatestGames() {
   }
 }
 
+async function fetchPromiedosGamecenter(gameId: string) {
+  try {
+    const response = await fetchWithTimeout(`${PROMIEDOS_API_URL}/gamecenter/${gameId}`, {
+      next: { revalidate: 30 },
+      headers: { "X-VER": PROMIEDOS_VERSION },
+    }, PROMIEDOS_TIMEOUT_MS);
+    if (!response.ok) return undefined;
+    const payload = await response.json() as PromiedosGamecenterResponse;
+    return payload.game;
+  } catch {
+    return undefined;
+  }
+}
+
+function gameNeedsScorerDetails(game: PromiedosGame) {
+  const hasScore = Boolean(game.scores);
+  const hasScorers = (game.teams ?? []).some((team) => team.goals?.length);
+  const status = statusFromPromiedos(game);
+  return Boolean(game.id && hasScore && !hasScorers && status !== "scheduled");
+}
+
+function mergePromiedosGame(base: PromiedosGame, detail?: PromiedosGame) {
+  if (!detail) return base;
+  return {
+    ...base,
+    ...detail,
+    teams: detail.teams?.length ? detail.teams : base.teams,
+    scores: detail.scores ?? base.scores,
+    status: detail.status ?? base.status,
+    start_time: detail.start_time ?? base.start_time,
+    game_time: detail.game_time ?? base.game_time,
+    game_time_to_display: detail.game_time_to_display ?? base.game_time_to_display,
+    game_time_status_to_display: detail.game_time_status_to_display ?? base.game_time_status_to_display,
+  };
+}
+
+async function enrichPromiedosGamesWithScorers(games: PromiedosGame[]) {
+  const details = await Promise.all(
+    games.map((game) => gameNeedsScorerDetails(game) ? fetchPromiedosGamecenter(game.id!) : Promise.resolve(undefined)),
+  );
+  return games.map((game, index) => mergePromiedosGame(game, details[index]));
+}
+
 async function collectPromiedosGames(payload: PromiedosPageData) {
   const data = payload.props?.pageProps?.data;
   const filters = data?.games?.filters ?? [];
@@ -1265,7 +1313,7 @@ export async function getWorldCupData() {
   }
 
   try {
-    const promiedosGames = await fetchPromiedosLatestGames();
+    const promiedosGames = await enrichPromiedosGamesWithScorers(await fetchPromiedosLatestGames());
     const fixtures = applyPromiedosKnockoutFixtures(await fetchFixtures().catch(() => []), promiedosGames);
     if (!fixtures.length) throw new Error("No se pudieron cargar fixtures reales");
     const [promiedosOverlays, apiOverlays] = await Promise.all([

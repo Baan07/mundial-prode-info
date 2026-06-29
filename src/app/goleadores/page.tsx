@@ -3,6 +3,7 @@ import { ScorerTable } from "@/components/ScorerTable";
 import { getWorldCupData } from "@/lib/realData";
 
 export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 export default async function ScorersPage() {
   const { matches, teams, isLiveConnected } = await getWorldCupData();
