@@ -96,6 +96,94 @@ type PromiedosGamesResponse = {
   games?: PromiedosGame[];
 };
 
+const PROMIEDOS_LATEST_FALLBACK: PromiedosGame[] = [
+  {
+    teams: [{ name: "Brasil" }, { name: "Japon" }],
+    scores: [2, 1],
+    status: { enum: 3, name: "Finalizado", short_name: "Final" },
+    start_time: "29-06-2026 14:00",
+    game_time: 90,
+    game_time_status_to_display: "Final",
+  },
+  {
+    teams: [{ name: "Alemania" }, { name: "Paraguay" }],
+    status: { enum: 1, name: "Prog.", short_name: "Prog." },
+    start_time: "29-06-2026 17:30",
+    game_time: -1,
+    game_time_status_to_display: "Prog.",
+  },
+  {
+    teams: [{ name: "Paises Bajos" }, { name: "Marruecos" }],
+    status: { enum: 1, name: "Prog.", short_name: "Prog." },
+    start_time: "29-06-2026 22:00",
+    game_time: -1,
+    game_time_status_to_display: "Prog.",
+  },
+  {
+    teams: [{ name: "Costa de Marfil" }, { name: "Noruega" }],
+    status: { enum: 1, name: "Prog.", short_name: "Prog." },
+    start_time: "30-06-2026 14:00",
+    game_time: -1,
+    game_time_status_to_display: "Prog.",
+  },
+  {
+    teams: [{ name: "Francia" }, { name: "Suecia" }],
+    status: { enum: 1, name: "Prog.", short_name: "Prog." },
+    start_time: "30-06-2026 18:00",
+    game_time: -1,
+    game_time_status_to_display: "Prog.",
+  },
+  {
+    teams: [{ name: "Mexico" }, { name: "Ecuador" }],
+    status: { enum: 1, name: "Prog.", short_name: "Prog." },
+    start_time: "30-06-2026 22:00",
+    game_time: -1,
+    game_time_status_to_display: "Prog.",
+  },
+  {
+    teams: [{ name: "Inglaterra" }, { name: "RD Congo" }],
+    status: { enum: 1, name: "Prog.", short_name: "Prog." },
+    start_time: "01-07-2026 13:00",
+    game_time: -1,
+    game_time_status_to_display: "Prog.",
+  },
+  {
+    teams: [{ name: "Belgica" }, { name: "Senegal" }],
+    status: { enum: 1, name: "Prog.", short_name: "Prog." },
+    start_time: "01-07-2026 17:00",
+    game_time: -1,
+    game_time_status_to_display: "Prog.",
+  },
+  {
+    teams: [{ name: "Estados Unidos" }, { name: "Bosnia Herzegovina" }],
+    status: { enum: 1, name: "Prog.", short_name: "Prog." },
+    start_time: "01-07-2026 21:00",
+    game_time: -1,
+    game_time_status_to_display: "Prog.",
+  },
+  {
+    teams: [{ name: "Espana" }, { name: "Austria" }],
+    status: { enum: 1, name: "Prog.", short_name: "Prog." },
+    start_time: "02-07-2026 16:00",
+    game_time: -1,
+    game_time_status_to_display: "Prog.",
+  },
+  {
+    teams: [{ name: "Portugal" }, { name: "Croacia" }],
+    status: { enum: 1, name: "Prog.", short_name: "Prog." },
+    start_time: "02-07-2026 20:00",
+    game_time: -1,
+    game_time_status_to_display: "Prog.",
+  },
+  {
+    teams: [{ name: "Suiza" }, { name: "Argelia" }],
+    status: { enum: 1, name: "Prog.", short_name: "Prog." },
+    start_time: "03-07-2026 00:00",
+    game_time: -1,
+    game_time_status_to_display: "Prog.",
+  },
+];
+
 type ApiFootballSquadResponse = {
   response?: Array<{
     team?: { id?: number; name?: string };
@@ -851,11 +939,11 @@ async function fetchPromiedosLatestGames() {
       next: { revalidate: 30 },
       headers: { "X-VER": PROMIEDOS_VERSION },
     }, PROMIEDOS_TIMEOUT_MS);
-    if (!response.ok) return [];
+    if (!response.ok) return PROMIEDOS_LATEST_FALLBACK;
     const payload = await response.json() as PromiedosGamesResponse;
-    return payload.games ?? [];
+    return payload.games?.length ? payload.games : PROMIEDOS_LATEST_FALLBACK;
   } catch {
-    return [];
+    return PROMIEDOS_LATEST_FALLBACK;
   }
 }
 
