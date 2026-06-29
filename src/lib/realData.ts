@@ -49,6 +49,7 @@ type LiveOverlay = {
 };
 
 type PromiedosGame = {
+  to_qualify?: number;
   stage_round_name?: string;
   teams?: Array<{
     name?: string;
@@ -726,6 +727,13 @@ function promiedosDateTimeKey(value?: string) {
   return `${match[3]}-${match[2]}-${match[1]} ${match[4]}:${match[5]}`;
 }
 
+function promiedosKickoffUtc(value?: string) {
+  const match = value?.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})/);
+  if (!match) return undefined;
+  const [, day, month, year, hour, minute] = match;
+  return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour) + 3, Number(minute))).toISOString();
+}
+
 function espnSearchName(teamId: string) {
   return espnTeamNameById[teamId] ?? apiFootballSearchName(teamId);
 }
@@ -989,9 +997,11 @@ async function fetchPromiedosOverlay(fixtures: StatsApiFixture[], providedGames?
       const home = game.teams?.[0]?.name ?? game.teams?.[0]?.short_name;
       const away = game.teams?.[1]?.name ?? game.teams?.[1]?.short_name;
       if (!home || !away) continue;
+      const gameTimeKey = promiedosDateTimeKey(game.start_time);
       const fixture = fixtures.find((candidate) =>
         (sameTeamName(home, candidate.homeTeam) && sameTeamName(away, candidate.awayTeam)) ||
-        (sameTeamName(home, candidate.awayTeam) && sameTeamName(away, candidate.homeTeam)),
+        (sameTeamName(home, candidate.awayTeam) && sameTeamName(away, candidate.homeTeam)) ||
+        (candidate.stage !== "group-stage" && Boolean(gameTimeKey) && argentinaDateTimeKey(candidate.kickoffUtc) === gameTimeKey),
       );
       if (!fixture) continue;
 
@@ -1160,16 +1170,77 @@ function resolvePromiedosKnockoutFixtures(fixtures: StatsApiFixture[], games: Pr
   });
 }
 
+function isPromiedosKnockoutGame(game: PromiedosGame) {
+  const home = game.teams?.[0]?.name ?? game.teams?.[0]?.short_name;
+  const away = game.teams?.[1]?.name ?? game.teams?.[1]?.short_name;
+  const key = promiedosDateTimeKey(game.start_time);
+  return Boolean(home && away && key && (!game.stage_round_name || game.to_qualify));
+}
+
+function promiedosFixtureFromGame(game: PromiedosGame, matchNumber: number, base?: StatsApiFixture): StatsApiFixture | undefined {
+  const home = game.teams?.[0]?.name ?? game.teams?.[0]?.short_name;
+  const away = game.teams?.[1]?.name ?? game.teams?.[1]?.short_name;
+  const key = promiedosDateTimeKey(game.start_time);
+  const kickoffUtc = promiedosKickoffUtc(game.start_time);
+  if (!home || !away || !key || !kickoffUtc) return undefined;
+
+  return {
+    matchNumber,
+    date: key.slice(0, 10),
+    kickoffUtc,
+    stage: base?.stage ?? "round-of-32",
+    group: undefined,
+    homeTeam: canonicalTeamName(home),
+    awayTeam: canonicalTeamName(away),
+    stadium: base?.stadium ?? "Sede FIFA",
+    hostCity: base?.hostCity ?? "",
+    matchUrl: base?.matchUrl,
+  };
+}
+
+function applyPromiedosKnockoutFixtures(fixtures: StatsApiFixture[], games: PromiedosGame[]) {
+  const knockoutGames = games
+    .filter(isPromiedosKnockoutGame)
+    .sort((a, b) => (promiedosDateTimeKey(a.start_time) ?? "").localeCompare(promiedosDateTimeKey(b.start_time) ?? ""));
+  if (!knockoutGames.length) return fixtures;
+
+  const fixturesByTime = new Map<string, StatsApiFixture[]>();
+  for (const fixture of fixtures) {
+    if (fixture.stage === "group-stage") continue;
+    const key = argentinaDateTimeKey(fixture.kickoffUtc);
+    fixturesByTime.set(key, [...(fixturesByTime.get(key) ?? []), fixture]);
+  }
+
+  const usedMatchNumbers = new Set<number>();
+  const promotedByNumber = new Map<number, StatsApiFixture>();
+  knockoutGames.forEach((game, index) => {
+    const key = promiedosDateTimeKey(game.start_time);
+    const base = key ? fixturesByTime.get(key)?.find((fixture) => !usedMatchNumbers.has(fixture.matchNumber)) : undefined;
+    const matchNumber = base?.matchNumber ?? 9000 + index;
+    const promoted = promiedosFixtureFromGame(game, matchNumber, base);
+    if (!promoted) return;
+    usedMatchNumbers.add(matchNumber);
+    promotedByNumber.set(matchNumber, promoted);
+  });
+
+  const merged = fixtures.map((fixture) => promotedByNumber.get(fixture.matchNumber) ?? fixture);
+  const existingNumbers = new Set(merged.map((fixture) => fixture.matchNumber));
+  for (const fixture of promotedByNumber.values()) {
+    if (!existingNumbers.has(fixture.matchNumber)) merged.push(fixture);
+  }
+
+  return merged.sort((a, b) => new Date(a.kickoffUtc).getTime() - new Date(b.kickoffUtc).getTime());
+}
+
 export async function getWorldCupData() {
   if (cachedWorldCupData && cachedWorldCupData.expiresAt > Date.now()) {
     return cachedWorldCupData.data;
   }
 
   try {
-    const [fixtures, promiedosGames] = await Promise.all([
-      fetchFixtures(),
-      fetchPromiedosLatestGames(),
-    ]);
+    const promiedosGames = await fetchPromiedosLatestGames();
+    const fixtures = applyPromiedosKnockoutFixtures(await fetchFixtures().catch(() => []), promiedosGames);
+    if (!fixtures.length) throw new Error("No se pudieron cargar fixtures reales");
     const [promiedosOverlays, apiOverlays] = await Promise.all([
       fetchPromiedosOverlay(fixtures, promiedosGames),
       fetchLiveOverlay(fixtures),
