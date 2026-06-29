@@ -731,7 +731,7 @@ function promiedosKickoffUtc(value?: string) {
   const match = value?.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})/);
   if (!match) return undefined;
   const [, day, month, year, hour, minute] = match;
-  return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour) + 3, Number(minute))).toISOString();
+  return new Date(`${year}-${month}-${day}T${hour}:${minute}:00-03:00`).toISOString();
 }
 
 function espnSearchName(teamId: string) {
@@ -1213,6 +1213,7 @@ function applyPromiedosKnockoutFixtures(fixtures: StatsApiFixture[], games: Prom
 
   const usedMatchNumbers = new Set<number>();
   const promotedByNumber = new Map<number, StatsApiFixture>();
+  const promotedTimes = new Set<string>();
   knockoutGames.forEach((game, index) => {
     const key = promiedosDateTimeKey(game.start_time);
     const base = key ? fixturesByTime.get(key)?.find((fixture) => !usedMatchNumbers.has(fixture.matchNumber)) : undefined;
@@ -1220,10 +1221,17 @@ function applyPromiedosKnockoutFixtures(fixtures: StatsApiFixture[], games: Prom
     const promoted = promiedosFixtureFromGame(game, matchNumber, base);
     if (!promoted) return;
     usedMatchNumbers.add(matchNumber);
+    promotedTimes.add(key ?? argentinaDateTimeKey(promoted.kickoffUtc));
     promotedByNumber.set(matchNumber, promoted);
   });
 
-  const merged = fixtures.map((fixture) => promotedByNumber.get(fixture.matchNumber) ?? fixture);
+  const merged = fixtures
+    .filter((fixture) => {
+      if (fixture.stage === "group-stage") return true;
+      if (promotedByNumber.has(fixture.matchNumber)) return false;
+      if (promotedTimes.has(argentinaDateTimeKey(fixture.kickoffUtc))) return false;
+      return !isPlaceholder(fixture.homeTeam) && !isPlaceholder(fixture.awayTeam);
+    });
   const existingNumbers = new Set(merged.map((fixture) => fixture.matchNumber));
   for (const fixture of promotedByNumber.values()) {
     if (!existingNumbers.has(fixture.matchNumber)) merged.push(fixture);
