@@ -117,9 +117,14 @@ function upcomingKnockoutMatches(matches: Match[], limit = 3) {
     .slice(0, limit);
 }
 
+function hasRealScore(match: Match) {
+  return match.homeScore !== undefined && match.awayScore !== undefined;
+}
+
 function liveAndTodayResults(matches: Match[]) {
   const today = todayInArgentina();
   return matches
+    .filter((match) => hasRealScore(match))
     .filter((match) => match.status === "live" || (match.status === "finished" && belongsToVisibleDate(match, today, 0, today)))
     .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime());
 }
@@ -127,7 +132,8 @@ function liveAndTodayResults(matches: Match[]) {
 export default async function Home() {
   const { matches, teams } = await getWorldCupData();
   const liveResults = liveAndTodayResults(matches);
-  const visibleMatches = upcomingKnockoutMatches(matches, 3);
+  const liveResultIds = new Set(liveResults.map((match) => match.id));
+  const visibleMatches = upcomingKnockoutMatches(matches.filter((match) => !liveResultIds.has(match.id)), 3);
   const matchGroups = visibleMatchGroups(visibleMatches);
   const liveCount = liveResults.filter((match) => match.status === "live").length;
   const finishedTodayCount = liveResults.filter((match) => match.status === "finished").length;

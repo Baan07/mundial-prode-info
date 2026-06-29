@@ -9,8 +9,16 @@ function argentinaHourLabel(value: string) {
   return `${formatArgentinaTime(value).split(",").pop()?.trim() ?? formatArgentinaTime(value)} ARG`;
 }
 
+function displayLiveMinute(match: Match) {
+  if (match.status !== "live") return undefined;
+  if (match.liveMinute) return match.liveMinute;
+  const elapsed = Math.floor((Date.now() - new Date(match.kickoffAt).getTime()) / 60000);
+  return clamp(elapsed, 1, 120);
+}
+
 function statusText(match: Match) {
-  if (match.status === "live") return match.liveMinute ? `${match.liveMinute}' EN VIVO` : "EN VIVO";
+  const minute = displayLiveMinute(match);
+  if (match.status === "live") return minute ? `${minute}' EN VIVO` : "EN VIVO";
   if (match.status === "finished") return "FINALIZADO";
   return "PREVIA";
 }
@@ -59,6 +67,7 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
   if (!home || !away) return null;
 
   const hasScore = match.homeScore !== undefined && match.awayScore !== undefined;
+  const liveMinute = displayLiveMinute(match);
   const metrics = matchMetrics(match, home, away);
   const matchEvents = events(match);
 
@@ -121,7 +130,7 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
 
           <div className="grid gap-2 border-t border-white/10 pt-3">
             <div className="relative h-2 overflow-hidden bg-white/10">
-              <span className={`absolute top-0 h-full w-1.5 ${match.status === "live" ? "bg-[#ef233c]" : "bg-[#d9a441]"}`} style={{ left: match.status === "scheduled" ? "0%" : `${clamp(match.liveMinute ?? 90, 0, 90) / 90 * 100}%` }} />
+              <span className={`absolute top-0 h-full w-1.5 ${match.status === "live" ? "bg-[#ef233c]" : "bg-[#d9a441]"}`} style={{ left: match.status === "scheduled" ? "0%" : `${clamp(liveMinute ?? 90, 0, 90) / 90 * 100}%` }} />
             </div>
             <div className="flex flex-wrap gap-2 text-xs font-bold text-white/58">
               {matchEvents.length ? matchEvents.map((event) => (

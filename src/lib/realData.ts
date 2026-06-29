@@ -448,6 +448,7 @@ function toMatch(fixture: StatsApiFixture, overlay?: LiveOverlay): Match {
   const homeTeamId = slug(fixture.homeTeam);
   const awayTeamId = slug(fixture.awayTeam);
   const baseStatus = statusFromKickoff(fixture.kickoffUtc);
+  const status = overlay?.status ?? (baseStatus === "live" ? "scheduled" : baseStatus);
 
   return {
     id: `m-${fixture.matchNumber}`,
@@ -459,7 +460,7 @@ function toMatch(fixture: StatsApiFixture, overlay?: LiveOverlay): Match {
     stadium: fixture.stadium,
     city: cityName(fixture.hostCity),
     kickoffAt: fixture.kickoffUtc,
-    status: overlay?.status ?? baseStatus,
+    status,
     homeScore: overlay?.homeScore,
     awayScore: overlay?.awayScore,
     liveMinute: overlay?.liveMinute,
