@@ -14,6 +14,7 @@ const FIXTURES_TIMEOUT_MS = 2500;
 const PROMIEDOS_TIMEOUT_MS = 3500;
 const PROMIEDOS_FILTER_TIMEOUT_MS = 2200;
 const LIVE_API_TIMEOUT_MS = 2500;
+const PROMIEDOS_ARGENTINA_HOUR_CORRECTION = 1;
 
 type WorldCupData = {
   teams: Team[];
@@ -724,14 +725,32 @@ function argentinaDateTimeKey(value: string) {
 function promiedosDateTimeKey(value?: string) {
   const match = value?.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})/);
   if (!match) return undefined;
-  return `${match[3]}-${match[2]}-${match[1]} ${match[4]}:${match[5]}`;
+  const corrected = new Date(Date.UTC(
+    Number(match[3]),
+    Number(match[2]) - 1,
+    Number(match[1]),
+    Number(match[4]) + PROMIEDOS_ARGENTINA_HOUR_CORRECTION,
+    Number(match[5]),
+  ));
+  const year = corrected.getUTCFullYear();
+  const month = String(corrected.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(corrected.getUTCDate()).padStart(2, "0");
+  const hour = String(corrected.getUTCHours()).padStart(2, "0");
+  const minute = String(corrected.getUTCMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day} ${hour}:${minute}`;
 }
 
 function promiedosKickoffUtc(value?: string) {
   const match = value?.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})/);
   if (!match) return undefined;
-  const [, day, month, year, hour, minute] = match;
-  return new Date(`${year}-${month}-${day}T${hour}:${minute}:00-03:00`).toISOString();
+  const corrected = new Date(Date.UTC(
+    Number(match[3]),
+    Number(match[2]) - 1,
+    Number(match[1]),
+    Number(match[4]) + PROMIEDOS_ARGENTINA_HOUR_CORRECTION + 3,
+    Number(match[5]),
+  ));
+  return corrected.toISOString();
 }
 
 function espnSearchName(teamId: string) {
