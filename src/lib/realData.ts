@@ -92,6 +92,10 @@ type PromiedosPageData = {
   };
 };
 
+type PromiedosGamesResponse = {
+  games?: PromiedosGame[];
+};
+
 type ApiFootballSquadResponse = {
   response?: Array<{
     team?: { id?: number; name?: string };
@@ -291,6 +295,57 @@ const spanishNameByTeam: Record<string, string> = {
   Uzbekistan: "Uzbekistan",
 };
 
+const canonicalTeamByAlias: Record<string, string> = {
+  alemania: "Germany",
+  "arabia saudita": "Saudi Arabia",
+  argelia: "Algeria",
+  argentina: "Argentina",
+  australia: "Australia",
+  austria: "Austria",
+  belgica: "Belgium",
+  "bosnia herzegovina": "Bosnia and Herzegovina",
+  "bosnia y herzegovina": "Bosnia and Herzegovina",
+  brasil: "Brazil",
+  "cabo verde": "Cabo Verde",
+  canada: "Canada",
+  colombia: "Colombia",
+  "corea del sur": "Korea Republic",
+  "costa de marfil": "Cote d'Ivoire",
+  croacia: "Croatia",
+  curazao: "Curacao",
+  ecuador: "Ecuador",
+  egipto: "Egypt",
+  espana: "Spain",
+  "estados unidos": "United States",
+  francia: "France",
+  ghana: "Ghana",
+  haiti: "Haiti",
+  inglaterra: "England",
+  iran: "IR Iran",
+  irak: "Iraq",
+  japon: "Japan",
+  jordania: "Jordan",
+  marruecos: "Morocco",
+  mexico: "Mexico",
+  noruega: "Norway",
+  "nueva zelanda": "New Zealand",
+  "paises bajos": "Netherlands",
+  panama: "Panama",
+  paraguay: "Paraguay",
+  portugal: "Portugal",
+  qatar: "Qatar",
+  "rd congo": "Congo DR",
+  "republica checa": "Czechia",
+  senegal: "Senegal",
+  sudafrica: "South Africa",
+  suecia: "Sweden",
+  suiza: "Switzerland",
+  tunez: "Tunisia",
+  turquia: "Turkiye",
+  uruguay: "Uruguay",
+  uzbekistan: "Uzbekistan",
+};
+
 const strengthByTeam: Record<string, number> = {
   Argentina: 94,
   France: 93,
@@ -406,36 +461,37 @@ function translatePlaceholderTeamName(name: string) {
 }
 
 function flagUrlForTeam(name: string) {
-  const code = flagCodeByTeam[name];
+  const code = flagCodeByTeam[canonicalTeamName(name)];
   return code ? `https://flagcdn.com/w80/${code}.png` : undefined;
 }
 
 function toTeam(name: string, group = ""): Team {
-  const existing = fallbackTeams.find((team) => team.name === name || team.countryCode === name);
-  const flagCode = flagCodeByTeam[name];
-  const displayName = isPlaceholder(name) ? translatePlaceholderTeamName(name) : spanishNameByTeam[name];
+  const canonicalName = canonicalTeamName(name);
+  const existing = fallbackTeams.find((team) => team.name === canonicalName || team.countryCode === canonicalName);
+  const flagCode = flagCodeByTeam[canonicalName];
+  const displayName = isPlaceholder(name) ? translatePlaceholderTeamName(name) : spanishNameByTeam[canonicalName] ?? name;
   if (existing) {
     return {
       ...existing,
-      id: slug(name),
+      id: slug(canonicalName),
       name: displayName ?? existing.name,
-      flag: flagByTeam[name] ?? existing.flag,
+      flag: flagByTeam[canonicalName] ?? existing.flag,
       flagCode,
-      flagUrl: flagUrlForTeam(name),
+      flagUrl: flagUrlForTeam(canonicalName),
       group: group || existing.group,
     };
   }
 
   return {
-    id: slug(name),
+    id: slug(canonicalName),
     name: displayName ?? name,
-    flag: flagByTeam[name] ?? (isPlaceholder(name) ? "🏆" : "🏳️"),
+    flag: flagByTeam[canonicalName] ?? (isPlaceholder(name) ? "🏆" : "🏳️"),
     flagCode,
-    flagUrl: flagUrlForTeam(name),
-    countryCode: slug(name).slice(0, 3).toUpperCase(),
+    flagUrl: flagUrlForTeam(canonicalName),
+    countryCode: slug(canonicalName).slice(0, 3).toUpperCase(),
     group,
     coach: "",
-    strengthRating: strengthByTeam[name] ?? (isPlaceholder(name) ? 75 : 76),
+    strengthRating: strengthByTeam[canonicalName] ?? (isPlaceholder(name) ? 75 : 76),
     played: 0,
     points: 0,
     goalsFor: 0,
@@ -445,8 +501,8 @@ function toTeam(name: string, group = ""): Team {
 }
 
 function toMatch(fixture: StatsApiFixture, overlay?: LiveOverlay): Match {
-  const homeTeamId = slug(fixture.homeTeam);
-  const awayTeamId = slug(fixture.awayTeam);
+  const homeTeamId = slug(canonicalTeamName(fixture.homeTeam));
+  const awayTeamId = slug(canonicalTeamName(fixture.awayTeam));
   const baseStatus = statusFromKickoff(fixture.kickoffUtc);
   const fallbackStatus = baseStatus === "live" ? "scheduled" : baseStatus;
 
@@ -517,19 +573,25 @@ function normalizeName(value: string) {
     .trim();
 }
 
+function canonicalTeamName(name: string) {
+  return canonicalTeamByAlias[normalizeName(name)] ?? name;
+}
+
 function fixtureTeamNames(name: string) {
+  const canonical = canonicalTeamName(name);
   return [
     name,
-    spanishNameByTeam[name],
-    name.replace("IR Iran", "Iran"),
-    name.replace("Cote d'Ivoire", "Costa de Marfil"),
-    name.replace("Congo DR", "RD Congo"),
-    name.replace("Bosnia and Herzegovina", "Bosnia Herzegovina"),
-    name.replace("Bosnia and Herzegovina", "Bosnia-Herzegovina"),
-    name.replace("Korea Republic", "Corea del Sur"),
-    name.replace("United States", "Estados Unidos"),
-    name.replace("Netherlands", "Paises Bajos"),
-    name.replace("Turkiye", "Turquia"),
+    canonical,
+    spanishNameByTeam[canonical],
+    canonical.replace("IR Iran", "Iran"),
+    canonical.replace("Cote d'Ivoire", "Costa de Marfil"),
+    canonical.replace("Congo DR", "RD Congo"),
+    canonical.replace("Bosnia and Herzegovina", "Bosnia Herzegovina"),
+    canonical.replace("Bosnia and Herzegovina", "Bosnia-Herzegovina"),
+    canonical.replace("Korea Republic", "Corea del Sur"),
+    canonical.replace("United States", "Estados Unidos"),
+    canonical.replace("Netherlands", "Paises Bajos"),
+    canonical.replace("Turkiye", "Turquia"),
   ].filter(Boolean).map((item) => normalizeName(item));
 }
 
@@ -553,6 +615,27 @@ function minuteFromPromiedos(game: PromiedosGame) {
   const raw = `${game.game_time_to_display ?? ""} ${game.game_time_status_to_display ?? ""}`;
   const minute = raw.match(/\d{1,3}/)?.[0];
   return minute ? Number(minute) : undefined;
+}
+
+function argentinaDateTimeKey(value: string) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    day: "2-digit",
+    hour: "2-digit",
+    hour12: false,
+    hourCycle: "h23",
+    minute: "2-digit",
+    month: "2-digit",
+    timeZone: "America/Argentina/Buenos_Aires",
+    year: "numeric",
+  }).formatToParts(new Date(value));
+  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")} ${part("hour")}:${part("minute")}`;
+}
+
+function promiedosDateTimeKey(value?: string) {
+  const match = value?.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})/);
+  if (!match) return undefined;
+  return `${match[3]}-${match[2]}-${match[1]} ${match[4]}:${match[5]}`;
 }
 
 function espnSearchName(teamId: string) {
@@ -762,6 +845,20 @@ async function fetchPromiedosFilterGames(leagueId: string, key: string) {
   }
 }
 
+async function fetchPromiedosLatestGames() {
+  try {
+    const response = await fetchWithTimeout(`${PROMIEDOS_API_URL}/league/games/fjda/latest`, {
+      next: { revalidate: 30 },
+      headers: { "X-VER": PROMIEDOS_VERSION },
+    }, PROMIEDOS_TIMEOUT_MS);
+    if (!response.ok) return [];
+    const payload = await response.json() as PromiedosGamesResponse;
+    return payload.games ?? [];
+  } catch {
+    return [];
+  }
+}
+
 async function collectPromiedosGames(payload: PromiedosPageData) {
   const data = payload.props?.pageProps?.data;
   const filters = data?.games?.filters ?? [];
@@ -786,15 +883,18 @@ async function collectPromiedosGames(payload: PromiedosPageData) {
   return Array.from(gamesByKey.values());
 }
 
-async function fetchPromiedosOverlay(fixtures: StatsApiFixture[]) {
+async function fetchPromiedosOverlay(fixtures: StatsApiFixture[], providedGames?: PromiedosGame[]) {
   try {
-    const response = await fetchWithTimeout(PROMIEDOS_WORLD_CUP_URL, { next: { revalidate: 30 } }, PROMIEDOS_TIMEOUT_MS);
-    if (!response.ok) return new Map<string, LiveOverlay>();
-    const html = await response.text();
-    const json = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/)?.[1];
-    if (!json) return new Map<string, LiveOverlay>();
-    const payload = JSON.parse(json) as PromiedosPageData;
-    const games = await collectPromiedosGames(payload);
+    let games = providedGames?.length ? providedGames : await fetchPromiedosLatestGames();
+    if (!games.length) {
+      const response = await fetchWithTimeout(PROMIEDOS_WORLD_CUP_URL, { next: { revalidate: 30 } }, PROMIEDOS_TIMEOUT_MS);
+      if (!response.ok) return new Map<string, LiveOverlay>();
+      const html = await response.text();
+      const json = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/)?.[1];
+      if (!json) return new Map<string, LiveOverlay>();
+      const payload = JSON.parse(json) as PromiedosPageData;
+      games = await collectPromiedosGames(payload);
+    }
     const overlays = new Map<string, LiveOverlay>();
 
     for (const game of games) {
@@ -946,15 +1046,44 @@ function resolveKnockoutFixtures(fixtures: StatsApiFixture[], rankings: Map<stri
   });
 }
 
+function resolvePromiedosKnockoutFixtures(fixtures: StatsApiFixture[], games: PromiedosGame[]) {
+  const gamesByStart = new Map<string, PromiedosGame>();
+  for (const game of games) {
+    const key = promiedosDateTimeKey(game.start_time);
+    const home = game.teams?.[0]?.name ?? game.teams?.[0]?.short_name;
+    const away = game.teams?.[1]?.name ?? game.teams?.[1]?.short_name;
+    if (key && home && away && !gamesByStart.has(key)) gamesByStart.set(key, game);
+  }
+
+  return fixtures.map((fixture) => {
+    if (fixture.stage === "group-stage") return fixture;
+    if (!isPlaceholder(fixture.homeTeam) && !isPlaceholder(fixture.awayTeam)) return fixture;
+
+    const game = gamesByStart.get(argentinaDateTimeKey(fixture.kickoffUtc));
+    const home = game?.teams?.[0]?.name ?? game?.teams?.[0]?.short_name;
+    const away = game?.teams?.[1]?.name ?? game?.teams?.[1]?.short_name;
+    if (!home || !away) return fixture;
+
+    return {
+      ...fixture,
+      homeTeam: canonicalTeamName(home),
+      awayTeam: canonicalTeamName(away),
+    };
+  });
+}
+
 export async function getWorldCupData() {
   if (cachedWorldCupData && cachedWorldCupData.expiresAt > Date.now()) {
     return cachedWorldCupData.data;
   }
 
   try {
-    const fixtures = await fetchFixtures();
+    const [fixtures, promiedosGames] = await Promise.all([
+      fetchFixtures(),
+      fetchPromiedosLatestGames(),
+    ]);
     const [promiedosOverlays, apiOverlays] = await Promise.all([
-      fetchPromiedosOverlay(fixtures),
+      fetchPromiedosOverlay(fixtures, promiedosGames),
       fetchLiveOverlay(fixtures),
     ]);
     const overlays = new Map<string, LiveOverlay>();
@@ -979,11 +1108,17 @@ export async function getWorldCupData() {
     const initialMatches = fixtures.map((fixture) => toMatch(fixture, overlays.get(String(fixture.matchNumber))));
     const initialTeams = applyGroupStandings(Array.from(teamMap.values()), initialMatches);
     const rankings = buildGroupRankings(initialTeams);
-    const resolvedFixtures = resolveKnockoutFixtures(fixtures, rankings, sourceNameById);
+    const resolvedFixtures = resolvePromiedosKnockoutFixtures(
+      resolveKnockoutFixtures(fixtures, rankings, sourceNameById),
+      promiedosGames,
+    );
+    const resolvedPromiedosOverlays = await fetchPromiedosOverlay(resolvedFixtures, promiedosGames);
+    for (const [key, overlay] of resolvedPromiedosOverlays) overlays.set(key, mergeOverlay(overlays.get(key), overlay) ?? overlay);
+
     const resolvedTeamMap = new Map<string, Team>();
     for (const fixture of resolvedFixtures) {
       for (const teamName of [fixture.homeTeam, fixture.awayTeam]) {
-        const id = slug(teamName);
+        const id = slug(canonicalTeamName(teamName));
         if (!resolvedTeamMap.has(id)) resolvedTeamMap.set(id, toTeam(teamName, groups.get(teamName) ?? ""));
       }
     }
