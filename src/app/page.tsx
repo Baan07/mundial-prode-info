@@ -117,11 +117,20 @@ function upcomingKnockoutMatches(matches: Match[], limit = 3) {
     .slice(0, limit);
 }
 
+function liveAndTodayResults(matches: Match[]) {
+  const today = todayInArgentina();
+  return matches
+    .filter((match) => match.status === "live" || (match.status === "finished" && belongsToVisibleDate(match, today, 0, today)))
+    .sort((a, b) => new Date(a.kickoffAt).getTime() - new Date(b.kickoffAt).getTime());
+}
+
 export default async function Home() {
   const { matches, teams } = await getWorldCupData();
+  const liveResults = liveAndTodayResults(matches);
   const visibleMatches = upcomingKnockoutMatches(matches, 3);
   const matchGroups = visibleMatchGroups(visibleMatches);
-  const liveCount = visibleMatches.filter((match) => match.status === "live").length;
+  const liveCount = liveResults.filter((match) => match.status === "live").length;
+  const finishedTodayCount = liveResults.filter((match) => match.status === "finished").length;
   const scheduledCount = visibleMatches.filter((match) => match.status === "scheduled").length;
 
   return (
@@ -129,6 +138,31 @@ export default async function Home() {
       <AutoRefresh seconds={30} />
 
       <section className="content-stage pt-24">
+        <section className="mb-10 grid gap-4">
+          <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+            <div>
+              <p className="section-kicker">Actualiza cada 30s</p>
+              <h2 className="section-title">En vivo y resultados de hoy</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs font-black uppercase tracking-[0.12em] text-white/70 sm:grid-cols-3">
+              <span className="bg-[#ef233c] px-3 py-2 text-white">Live {liveCount}</span>
+              <span className="bg-white/[0.07] px-3 py-2">Final {finishedTodayCount}</span>
+              <span className="hidden bg-white/[0.07] px-3 py-2 sm:block">Con goleadores</span>
+            </div>
+          </div>
+
+          {liveResults.length ? (
+            <div className="grid gap-4">
+              {liveResults.map((match) => <MatchCard match={match} teams={teams} key={`live-${match.id}`} />)}
+            </div>
+          ) : (
+            <div className="broadcast-empty">
+              <span>No hay partidos en vivo ni finalizados hoy.</span>
+              <small>Los marcadores y goleadores aparecen aca cuando el feed trae eventos del partido.</small>
+            </div>
+          )}
+        </section>
+
         <div className="mb-6 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
           <div>
             <p className="section-kicker">Desde 16avos</p>
