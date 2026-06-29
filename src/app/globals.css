@@ -342,6 +342,24 @@ button {
     linear-gradient(180deg, rgba(28, 31, 36, 0.94), rgba(8, 10, 13, 0.94));
 }
 
+.match-card-header {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto minmax(120px, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+
+.match-date-time {
+  justify-self: center;
+  color: var(--gold);
+  font-family: var(--font-bebas);
+  font-size: clamp(30px, 4.2vw, 58px);
+  line-height: 0.9;
+  text-align: center;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .match-mainline {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -549,6 +567,22 @@ button {
   .hero-score {
     width: 132px;
     min-height: 96px;
+  }
+
+  .match-card-header {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .match-card-header .status-chip {
+    grid-row: 2;
+  }
+
+  .match-date-time {
+    grid-row: 1;
+    justify-self: start;
+    font-size: clamp(34px, 11vw, 48px);
+    white-space: normal;
   }
 
   .match-mainline {

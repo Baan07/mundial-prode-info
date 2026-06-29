@@ -65,17 +65,15 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
   return (
     <Link className="block" href={`/partido/${match.id}`}>
       <article className={`match-broadcast animate-rise ${match.status}`}>
-        <div className="flex items-start justify-between gap-3">
+        <div className="match-card-header">
           <span className={`status-chip ${match.status === "live" ? "live" : ""}`}>
             {match.status === "live" ? <RadioTower size={14} /> : <Clock3 size={14} />}
             {statusText(match)}
           </span>
-          <div className="grid gap-1 text-right">
-            <span className="text-xs font-black uppercase tracking-[0.14em] text-[#d9a441]">{dateTimeLabel(match.kickoffAt)} ARG</span>
-            <span className="text-xs font-black uppercase tracking-[0.14em] text-white/50">
-              {match.phase || (match.group ? `Grupo ${match.group}` : "Mundial")}
-            </span>
-          </div>
+          <span className="match-date-time">{dateTimeLabel(match.kickoffAt)} ARG</span>
+          <span className="text-right text-xs font-black uppercase tracking-[0.14em] text-white/50">
+            {match.phase || (match.group ? `Grupo ${match.group}` : "Mundial")}
+          </span>
         </div>
 
         <div className="match-mainline">
@@ -87,7 +85,6 @@ export function MatchCard({ match, teams }: { match: Match; teams: Team[]; compa
 
           <div className="match-scorebox animate-score-pop">
             <strong>{hasScore ? `${match.homeScore}-${match.awayScore}` : "VS"}</strong>
-            <span className="block text-xs font-black uppercase tracking-wider">{dateTimeLabel(match.kickoffAt)}</span>
           </div>
 
           <div className="match-team away">
