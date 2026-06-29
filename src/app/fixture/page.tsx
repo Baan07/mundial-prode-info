@@ -3,6 +3,7 @@ import { FixtureExplorer } from "@/components/FixtureExplorer";
 import { getWorldCupData } from "@/lib/realData";
 
 export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 export default async function FixturePage() {
   const { matches, teams, isLiveConnected } = await getWorldCupData();

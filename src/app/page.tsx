@@ -4,6 +4,7 @@ import { getWorldCupData } from "@/lib/realData";
 import { Match } from "@/lib/types";
 
 export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 function argentinaDate(value: string) {
   return new Intl.DateTimeFormat("en-CA", {
